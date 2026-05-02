@@ -1,0 +1,75 @@
+/*
+ * globals.css — Owner App
+ *
+ * This file is the SINGLE CSS entry-point imported by layout.tsx.
+ *
+ * Processing order (handled by postcss-import + Tailwind):
+ *   1. @import '@knadh/oat/oat.min.css'   ← inlined by postcss-import BEFORE
+ *                                             Tailwind runs, so @layer base in
+ *                                             oat.min.css has a valid context.
+ *   2. @tailwind base / components / utilities ← establishes Tailwind layers
+ *   3. @layer base { :root { … } }        ← Society token overrides win cascade
+ *
+ * Why postcss-import is needed:
+ *   Oat UI's oat.min.css uses @layer base internally. Tailwind v3's PostCSS
+ *   plugin errors if it sees @layer without a prior @tailwind base in the
+ *   same file context. postcss-import (listed first in postcss.config.js)
+ *   inlines the @import before Tailwind processes anything, merging both
+ *   files into one PostCSS document — resolving the conflict cleanly.
+ *
+ * @see PRD §10.3.1 — Web Applications: Tailwind CSS + Oat UI
+ * @see PRD §10.3.3 — Oat UI CSS custom property overrides
+ */
+
+/* Oat UI base styles — inlined here by postcss-import before Tailwind runs */
+@import '@knadh/oat/oat.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /*
+     * ── Oat UI CSS Custom Property Overrides ────────────────────────────────
+     * These variables are read by Oat UI to style its semantic elements.
+     * Values are mapped from the shared design tokens in shared-ui-tokens/
+     * tailwind.config.ts so both Oat UI base styles and Tailwind utilities
+     * render with an identical visual language.
+     *
+     * @see https://oat.ink  (§ Customisation)
+     * @see PRD §10.3.3
+     */
+
+    /* Accent — maps to primary-600 (#2563eb) from shared-ui-tokens */
+    --color-accent: #2563eb;
+
+    /* Border radius — matches Tailwind's DEFAULT (0.25rem = 4 px) */
+    --border-radius: 0.25rem;
+
+    /* Typography */
+    --font-family: 'Inter', system-ui, sans-serif;
+
+    /*
+     * ── Society surface tokens (used by Tailwind utilities via @apply) ───────
+     * bg-surface            → white card/page background
+     * bg-surface-raised     → slightly elevated panels
+     */
+    --color-surface: #ffffff;
+    --color-surface-raised: #f8fafc;
+
+    /* Legacy token aliases kept for backward compat with existing JSX */
+    --color-primary-500: #3b82f6;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --radius-md: 0.375rem;
+  }
+
+  html {
+    font-family: var(--font-family);
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-surface text-slate-900;
+  }
+}

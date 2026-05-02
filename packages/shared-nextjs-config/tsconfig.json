@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  //
+  // ─── @society/shared-nextjs-config ──────────────────────────────────────
+  // This package contains only a plain JS config file (next.config.base.js)
+  // and its TypeScript declaration file (next.config.base.d.ts).
+  //
+  // allowJs + checkJs: type-checks the JS config file itself so we get
+  // immediate feedback if an invalid NextConfig shape is introduced.
+  // noEmit: true because there is nothing to compile — the .js file ships
+  // as-is and the .d.ts is hand-authored alongside it.
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["next.config.base.js", "next.config.base.d.ts"],
+  "exclude": ["node_modules"]
+}

@@ -62,8 +62,13 @@
 - [x] Configure root `tsconfig.base.json` and per-package `tsconfig.json` files
 - [x] Set up `nx.json` for optional Nx task-runner caching
 - [x] Author GitHub Actions CI workflow (lint → type-check → test → SAST → Snyk)
-- [ ] Author GitHub Actions CD/deploy workflow (Docker build → ECR push → Helm upgrade)
-- [ ] Write multi-stage Dockerfiles for all four NestJS services and `media-service`
+- [x] Configure global ESLint 9 flat config (`eslint.config.mjs`), Prettier (`.prettierrc.json`), and root `jsconfig.json`
+- [x] Scaffold application and backend service boilerplates (`shared-nextjs-config`, `shared-ui-tokens` preset, Next.js 15 web apps with Tailwind + Oat UI, NestJS services with TypeORM)
+- [x] Author GitHub Actions CD/deploy workflow (Docker build → ECR push → Helm upgrade)
+- [x] Write multi-stage Dockerfiles for all five NestJS services (`api-gateway`, `owner-service`, `admin-service`, `super-admin-service`, `media-service`) + root `.dockerignore`
+- [x] Configure Oat UI (`@knadh/oat` v0.5.0) in all three Next.js web apps — `postcss-import` pipeline, `@import` in `globals.css`, CSS custom property overrides, `src/types/global.d.ts` CSS module declarations
+- [x] Implement `shared-nextjs-config` `createNextConfig` factory with eager `copySharedAssets` (copies `shared-ui-assets` → `public/` at config-eval time; works for both Turbopack and webpack)
+- [x] Move components to `@society/shared-ui-components` — `ClickCounter` component in `src/web/`, barrel exports in `src/web/index.ts` and `src/index.ts`, package exports point to `./src` for `transpilePackages`
 - [ ] Provision AWS EKS cluster with namespaces per service
 - [ ] Configure Horizontal Pod Autoscaler (HPA) per service (CPU 70% threshold)
 - [ ] Provision AWS RDS PostgreSQL 16 (Multi-AZ primary + 2 read replicas)
@@ -415,15 +420,16 @@
 
 - [ ] `packages/shared-types` — all TypeScript interfaces, enums, and DTOs shared across FE + BE
 - [ ] `packages/shared-validators` — Zod schemas (phone, IFSC, document upload, booking, event)
-- [ ] `packages/shared-ui-tokens/tailwind.config.ts` — canonical design token config (colours, spacing, typography, shadows, border-radius)
-- [ ] `packages/shared-ui-tokens/oat-overrides.css` — Oat UI CSS variable overrides aligned to token values
-- [ ] `packages/shared-ui-components/web/` — Button, Card, Badge, Dialog, DataTable, StatusBadge wrapping Oat UI semantic elements
-- [ ] `packages/shared-ui-components/mobile/` — Button, Card, Badge, BottomSheet, StatusBadge for React Native (NativeWind)
-- [ ] `packages/shared-ui-components/shared/` — platform-agnostic hooks and constants (status → colour mapping)
+- [x] `packages/shared-ui-tokens/tailwind.config.ts` — canonical design token config (colours, spacing, typography, shadows, border-radius)
+- [ ] `packages/shared-ui-tokens/oat-overrides.css` — standalone Oat UI CSS variable overrides file (overrides currently live in each app's `globals.css`)
+- [x] `packages/shared-ui-components/src/web/` — `ClickCounter` (Oat UI demo: `article` · `button` · `mark` · `progress`); barrel exports in `src/web/index.ts` and `src/index.ts`; package exports point to `./src` (consumed via `transpilePackages`, no build step)
+- [ ] `packages/shared-ui-components/src/web/` — remaining components: Button, Card, Badge, Dialog, DataTable, StatusBadge wrapping Oat UI semantic elements
+- [ ] `packages/shared-ui-components/src/mobile/` — Button, Card, Badge, BottomSheet, StatusBadge for React Native (NativeWind)
+- [ ] `packages/shared-ui-components/src/shared/` — platform-agnostic hooks and constants (status → colour mapping)
 - [ ] `packages/shared-i18n` — translation strings for English, Hindi, Marathi (i18next compatible)
 - [ ] NativeWind v4 Babel/Metro plugin configuration per mobile app
-- [ ] Oat UI (`@knadh/oat`) integration in each Next.js app layout (`oat.min.css` import)
-- [ ] Lerna workspace symlink resolution — no publish step needed during local development
+- [x] Oat UI (`@knadh/oat` v0.5.0) integrated in all three Next.js web apps — `postcss-import` pipeline resolves `@layer` ordering; `@import` in `globals.css`; Oat UI CSS custom properties overridden per app
+- [x] Lerna workspace symlink resolution — `@society/shared-ui-components` consumed via workspace symlink with `exports: ./src`; `transpilePackages` in shared Next.js config ensures SWC compiles TypeScript source directly
 
 ---
 

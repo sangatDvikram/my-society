@@ -1,0 +1,22 @@
+{
+  "name": "@society/shared-types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared TypeScript interfaces, enums, and DTOs across all Society apps and services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'Covered by root eslint.config.mjs'"
+  },
+  "keywords": [
+    "society",
+    "types",
+    "shared"
+  ],
+  "license": "MIT"
+}

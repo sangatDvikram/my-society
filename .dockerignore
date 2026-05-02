@@ -1,0 +1,51 @@
+# =============================================================================
+# .dockerignore — files excluded from the Docker build context
+# Keeping the context small speeds up every docker build invocation.
+# =============================================================================
+
+# ── Version control ───────────────────────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+
+# ── Node / Yarn ───────────────────────────────────────────────────────────────
+node_modules
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# ── Build artefacts ───────────────────────────────────────────────────────────
+dist
+.next
+build
+out
+coverage
+
+# ── Local environment files (secrets must never enter the build context) ──────
+.env
+.env.*
+!.env.example
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.vscode
+.idea
+*.DS_Store
+Thumbs.db
+
+# ── CI / Tooling ──────────────────────────────────────────────────────────────
+.github
+.nx
+.eslintcache
+*.log
+*.tsbuildinfo
+
+# ── Docs (not needed at runtime) ─────────────────────────────────────────────
+docs
+*.md
+!backend/*/README.md
+
+# ── Test files ────────────────────────────────────────────────────────────────
+**/*.spec.ts
+**/__tests__
+jest.config.*

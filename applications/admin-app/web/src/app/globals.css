@@ -1,0 +1,47 @@
+/*
+ * globals.css — Admin App
+ *
+ * Single CSS entry-point imported by layout.tsx.
+ *
+ * Processing order (handled by postcss-import + Tailwind):
+ *   1. @import '@knadh/oat/oat.min.css'  ← inlined by postcss-import BEFORE
+ *                                            Tailwind runs (resolves @layer error)
+ *   2. @tailwind base / components / utilities
+ *   3. @layer base { :root { … } }       ← Society token overrides win cascade
+ *
+ * @see PRD §10.3.1, §10.3.3
+ */
+
+/* Oat UI base styles — inlined here by postcss-import before Tailwind runs */
+@import '@knadh/oat/oat.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Oat UI CSS Custom Property Overrides ────────────────────────────── */
+    --color-accent:   #2563eb;          /* primary-600 from shared-ui-tokens  */
+    --border-radius:  0.25rem;          /* matches Tailwind DEFAULT            */
+    --font-family:    'Inter', system-ui, sans-serif;
+
+    /* ── Society surface tokens ──────────────────────────────────────────── */
+    --color-surface:        #ffffff;
+    --color-surface-raised: #f8fafc;
+
+    /* Legacy aliases */
+    --color-primary-500: #3b82f6;
+    --font-sans:         'Inter', system-ui, sans-serif;
+    --radius-md:         0.375rem;
+  }
+
+  html {
+    font-family: var(--font-family);
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-surface text-slate-900;
+  }
+}

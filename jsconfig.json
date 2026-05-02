@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json.schemastore.org/jsconfig",
+  //
+  // ─── ROOT JSCONFIG ──────────────────────────────────────────────────────────
+  //
+  // This file gives IDE IntelliSense (VS Code, WebStorm, etc.) full path
+  // resolution and auto-import support for the plain JavaScript files that live
+  // at the repo root and inside packages/shared-ui-assets.
+  //
+  // TypeScript packages (.ts source) are handled by their own tsconfig.json
+  // files which extend tsconfig.base.json.  This jsconfig is intentionally
+  // narrow in scope — it should NOT overlap with those tsconfig files.
+  // ──────────────────────────────────────────────────────────────────────────
+
+  "compilerOptions": {
+    // ── Language ────────────────────────────────────────────────────────────
+    "target": "ES2022",
+    "module": "node16",
+    "moduleResolution": "node16",
+    // Silence TS deprecation warnings for baseUrl in jsconfig context
+    "ignoreDeprecations": "6.0",
+
+    // ── JS support ──────────────────────────────────────────────────────────
+    "allowJs": true,
+    "checkJs": false,             // No type-errors in JS files (tsc is opt-in)
+    "maxNodeModuleJsDepth": 1,    // Only check direct-dependency .d.ts shapes
+
+    // ── Interop ─────────────────────────────────────────────────────────────
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+
+    // ── Path aliases — mirrors the @society/* workspace packages ────────────
+    // Allows IDEs to jump-to-source when you import from @society/* in .js files
+    "baseUrl": ".",
+    "paths": {
+      "@society/shared-ui-assets":     ["packages/shared-ui-assets/index.js"],
+      "@society/shared-types":         ["packages/shared-types/src/index.ts"],
+      "@society/shared-validators":    ["packages/shared-validators/src/index.ts"],
+      "@society/shared-ui-tokens":     ["packages/shared-ui-tokens/index.ts"],
+      "@society/shared-ui-components": ["packages/shared-ui-components/src/index.ts"],
+      "@society/shared-i18n":          ["packages/shared-i18n/src/index.ts"]
+    }
+  },
+
+  // ── What this jsconfig covers ────────────────────────────────────────────
+  // Only root-level scripts/configs and the JS-only shared-ui-assets package.
+  "include": [
+    "*.js",
+    "*.mjs",
+    "*.cjs",
+    "packages/shared-ui-assets/**/*.js"
+  ],
+
+  // ── Exclude build artefacts and TS-managed directories ───────────────────
+  "exclude": [
+    "node_modules",
+    "**/dist/**",
+    "**/.next/**",
+    "**/coverage/**",
+    "**/.expo/**",
+    "**/.nx/**"
+  ]
+}

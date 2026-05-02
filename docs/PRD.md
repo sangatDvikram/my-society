@@ -2918,18 +2918,47 @@ All three **web dashboards** (Next.js + React) adopt a two-layer styling approac
 
 ```bash
 # In each web package (e.g. applications/owner-app/web)
-npm install @knadh/oat
-npm install -D tailwindcss postcss autoprefixer
+yarn workspace @society/owner-app-web add @knadh/oat
+yarn workspace @society/owner-app-web add -D postcss-import
 ```
 
-**Root layout integration (`src/app/layout.tsx`):**
+**PostCSS configuration (`postcss.config.js`):**
+
+`postcss-import` **must be listed first** so that `@import` statements in `globals.css` are inlined before Tailwind's plugin runs. Without this, Tailwind v3 throws `CssSyntaxError: @layer base is used but no matching @tailwind base` when it encounters Oat UI's `@layer base` declarations in isolation.
+
+```js
+module.exports = {
+  plugins: {
+    'postcss-import': {},   // ← inlines @import before Tailwind processes @layer
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+```
+
+**Single CSS entry-point (`src/app/globals.css`):**
+
+```css
+/* Oat UI base styles — inlined here by postcss-import before Tailwind runs */
+@import '@knadh/oat/oat.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-accent:   #2563eb;   /* primary-600 from shared-ui-tokens */
+    --border-radius:  0.25rem;
+    --font-family:    'Inter', system-ui, sans-serif;
+  }
+}
+```
+
+**Root layout (`src/app/layout.tsx`)** imports only `globals.css` — no separate Oat UI import needed:
 
 ```typescript
-// Import Oat UI base styles first — styles semantic HTML elements globally
-import '@knadh/oat/oat.min.css';
-
-// Import Tailwind utilities and Oat UI token overrides
-import './globals.css'; // contains @tailwind base; @tailwind components; @tailwind utilities;
+import './globals.css'; // Oat UI + Tailwind + token overrides — all in one entry-point
 
 import type { Metadata } from 'next';
 
@@ -2947,7 +2976,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-**Why this layering works:** Oat UI applies its styles to bare semantic elements (`button`, `input`, `dialog`, etc.) which React renders as standard HTML. Tailwind utility classes on the same elements are applied after Oat UI in the CSS cascade, providing clean, predictable overrides. No class conflicts arise because Oat UI does not use class-based styling for its base aesthetics.
+**Why this layering works:** `postcss-import` merges `oat.min.css` into the same PostCSS document as `globals.css` before any other plugin runs. Tailwind then sees its own `@tailwind base` directive before Oat UI's `@layer base` declarations, resolving the `@layer` ordering requirement. Oat UI styles bare semantic elements (`button`, `input`, `dialog`, `article`, `mark`, `progress`, etc.) which React renders as standard HTML. Tailwind utility classes win the cascade for any property they specify; no class conflicts arise because Oat UI does not use class-based selectors.
 
 **Oat UI components available for web:**
 
@@ -3069,18 +3098,21 @@ Oat UI's own CSS custom properties (`--color-accent`, `--border-radius`, etc.) a
 
 ```css
 /* applications/owner-app/web/src/app/globals.css */
-/* Note: @knadh/oat/oat.min.css is imported in layout.tsx before this file */
-
-/* Override Oat UI CSS variables to match shared design tokens */
-:root {
-  --color-accent: theme('colors.primary.600');
-  --border-radius: theme('borderRadius.DEFAULT');
-  --font-family: theme('fontFamily.sans');
-}
+/* postcss-import inlines this @import before Tailwind processes @layer directives */
+@import '@knadh/oat/oat.min.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Override Oat UI CSS variables to match shared design tokens */
+    --color-accent:   #2563eb;   /* theme('colors.primary.600') */
+    --border-radius:  0.25rem;   /* theme('borderRadius.DEFAULT') */
+    --font-family:    'Inter', system-ui, sans-serif;
+  }
+}
 ```
 
 ---
@@ -3094,12 +3126,16 @@ alankapuri-my-society/                  ← git root
 │
 ├── lerna.json                          ← Lerna config (version: independent)
 ├── package.json                        ← Root workspace config (npm workspaces)
-├── nx.json                             ← (optional) Nx task runner config
-├── tsconfig.base.json                  ← Shared TS compiler options
+├── nx.json                             ← Nx task-runner caching (build · test · lint · type-check)
+├── tsconfig.base.json                  ← ★ Shared strict TS compiler options
+├── jsconfig.json                       ← IDE support for root-level JS files
+├── eslint.config.mjs                   ← ★ ESLint 9 flat config (TS · React · RN · NestJS · Prettier)
+├── .prettierrc.json                    ← Prettier rules (singleQuote · no semi · 100-col · lf)
+├── sonar-project.properties            ← SonarCloud SAST configuration
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                      ← Lint, test, build on PR
-│       └── deploy.yml                  ← Deploy on merge to main
+│       ├── ci.yml                      ← CI pipeline (lint → type-check → test → SonarCloud → Snyk)
+│       └── deploy.yml                  ← Deploy on merge to main (CD — planned)
 │
 ├── applications/
 │   ├── owner-app/
@@ -3115,14 +3151,14 @@ alankapuri-my-society/                  ← git root
 │   │   └── web/                        ← Next.js + React + Tailwind CSS + Oat UI
 │   │       ├── src/
 │   │       │   ├── app/                ← Next.js App Router root
-│   │       │   │   ├── layout.tsx      ← Root layout: Oat UI + globals.css imports
-│   │       │   │   ├── page.tsx        ← Root page (redirects to /dashboard)
-│   │       │   │   └── globals.css     ← Oat UI token overrides + Tailwind directives
-│   │       │   ├── components/
-│   │       │   └── hooks/
+│   │       │   │   ├── layout.tsx      ← Root layout: single import of globals.css
+│   │       │   │   ├── page.tsx        ← Landing page — renders <ClickCounter /> from shared-ui-components
+│   │       │   │   └── globals.css     ← @import oat.min.css · @tailwind · Oat UI token overrides
+│   │       │   └── types/
+│   │       │       └── global.d.ts     ← declare module '*.css' (CSS side-effect type support)
 │   │       ├── tailwind.config.ts      ← extends packages/shared-ui-tokens
-│   │       ├── next.config.ts          ← Next.js configuration
-│   │       ├── postcss.config.js
+│   │       ├── next.config.ts          ← createNextConfig(__dirname) from @society/shared-nextjs-config
+│   │       ├── postcss.config.js       ← postcss-import (first) · tailwindcss · autoprefixer
 │   │       └── package.json
 │   │
 │   ├── admin-app/
@@ -3404,51 +3440,41 @@ alankapuri-my-society/                  ← git root
 │       └── package.json
 │
 └── packages/                           ← Shared internal libraries
+    ├── shared-nextjs-config/           ← ★ Shared Next.js base config for all web dashboards
+    │   ├── next.config.base.js         ← transpilePackages + security headers + image config
+    │   ├── next.config.base.d.ts       ← TypeScript declaration (NextConfig type)
+    │   ├── package.json                ← @society/shared-nextjs-config
+    │   └── tsconfig.json
     ├── shared-ui-assets/               ← ★ Centralised static assets (favicons, icons, manifests)
     │   ├── assets/                     ← All static files relocated from root /public/
-    │   │   ├── favicon.ico
-    │   │   ├── favicon-16x16.png
-    │   │   ├── favicon-32x32.png
-    │   │   ├── favicon-96x96.png
-    │   │   ├── apple-icon*.png         ← Apple touch icons (57–180 px)
-    │   │   ├── android-icon*.png       ← Android launcher icons (36–192 px)
-    │   │   ├── ms-icon*.png            ← Microsoft tile icons (70–310 px)
-    │   │   ├── manifest.json           ← PWA web-app manifest
-    │   │   └── browserconfig.xml       ← IE/Edge browser config (MS tile)
+    │   │   ├── favicon.ico · favicon-16x16.png · favicon-32x32.png · favicon-96x96.png
+    │   │   ├── apple-icon*.png · android-icon*.png · ms-icon*.png
+    │   │   ├── manifest.json · browserconfig.xml
     │   ├── index.js                    ← Exports resolved assetsPath for consuming apps
-    │   └── package.json               ← @society/shared-ui-assets
-    ├── shared-types/                   ← TypeScript interfaces & enums
+    │   ├── tsconfig.json
+    │   └── package.json                ← @society/shared-ui-assets
+    ├── shared-types/                   ← TypeScript interfaces & enums (FE + BE)
+    │   ├── package.json                ← @society/shared-types
+    │   └── tsconfig.json
     ├── shared-validators/              ← Zod schemas shared between FE & BE
-    ├── shared-ui-tokens/               ← Single source of truth for the design token system
-    │   ├── tailwind.config.ts          ← Canonical Tailwind config (colours, spacing, typography)
-    │   │                                  Extended by all 6 app packages (web + mobile)
-    │   ├── oat-overrides.css           ← Oat UI CSS variable overrides aligned to token values
-    │   │                                  Imported by each web app's index.css
-    │   └── package.json
-    ├── shared-ui-components/           ← Cross-platform UI component library
+    │   ├── package.json                ← @society/shared-validators
+    │   └── tsconfig.json
+    ├── shared-ui-tokens/               ← ★ Single source of truth for the design token system
+    │   ├── tailwind.config.ts          ← Canonical preset (colours, spacing, typography, radius, shadows)
+    │   │                                  Extended by all 6 app packages via presets: [...]
+    │   ├── package.json                ← @society/shared-ui-tokens
+    │   └── tsconfig.json
+    ├── shared-ui-components/           ← ★ Cross-platform UI component library
     │   ├── src/
-    │   │   ├── web/                    ← React components for Next.js + React apps
-    │   │   │   │                          Wrap Oat UI semantic elements; styled with Tailwind
-    │   │   │   ├── Button.tsx          ← e.g. <button className="..."> + Oat UI auto-styling
-    │   │   │   ├── Card.tsx            ← <article> wrapper with Tailwind spacing utilities
-    │   │   │   ├── Badge.tsx           ← <mark> wrapper
-    │   │   │   ├── Dialog.tsx          ← <dialog> wrapper with open/close state
-    │   │   │   ├── DataTable.tsx       ← <table> wrapper with pagination
-    │   │   │   ├── StatusBadge.tsx     ← Visitor/maintenance status chip
-    │   │   │   └── index.ts
-    │   │   ├── mobile/                 ← React Native components for Expo apps
-    │   │   │   │                          Styled with NativeWind className props
-    │   │   │   ├── Button.tsx          ← <Pressable> + NativeWind classes
-    │   │   │   ├── Card.tsx            ← <View> wrapper with shadow + rounded tokens
-    │   │   │   ├── Badge.tsx           ← <View>/<Text> status indicator
-    │   │   │   ├── BottomSheet.tsx     ← React Native modal sheet
-    │   │   │   ├── StatusBadge.tsx     ← Shared logic; platform-specific render
-    │   │   │   └── index.ts
-    │   │   └── shared/                 ← Platform-agnostic logic (no UI primitives)
-    │   │       ├── useVisitorStatus.ts ← Shared hook; returns label + colour key
-    │   │       └── constants.ts        ← Status → colour token mapping
-    │   └── package.json
-    └── shared-i18n/                    ← Translation strings (en, hi, mr)
+    │   │   ├── web/
+    │   │   │   ├── ClickCounter.tsx    ← Oat UI demo: article · button · mark · progress
+    │   │   │   └── index.ts            ← Web component barrel export
+    │   │   └── index.ts                ← Root barrel (re-exports web/)
+    │   ├── package.json                ← @society/shared-ui-components · exports: ./src (no build step)
+    │   └── tsconfig.json
+    └── shared-i18n/                    ← Translation strings (en, hi, mr) — i18next compatible
+        ├── package.json                ← @society/shared-i18n
+        └── tsconfig.json
 ```
 
 ### 11.2 Lerna Configuration
@@ -3668,6 +3694,72 @@ npx nx affected --target=test   --base=develop
 # Inspect cache hits/misses
 npx nx show project @society/owner-service
 ```
+
+---
+
+### 11.6 Shared Next.js Configuration Strategy
+
+All three web applications (`owner-app/web`, `admin-app/web`, `super-admin-app/web`) share a common
+Next.js base configuration published as the internal package **`@society/shared-nextjs-config`**.
+
+#### Package: `packages/shared-nextjs-config`
+
+| File | Role |
+|---|---|
+| `next.config.base.js` | Base `NextConfig` object — `transpilePackages`, security headers, image patterns, `poweredByHeader: false` |
+| `next.config.base.d.ts` | Hand-authored TypeScript declaration so consuming apps get full IntelliSense |
+| `tsconfig.json` | Extends root base; `allowJs + checkJs: true, noEmit: true` — type-checks the JS config itself |
+
+#### `transpilePackages` list
+
+Next.js must transpile workspace packages that ship TypeScript source (as opposed to pre-compiled JS).
+The shared config includes every `@society/*` internal package:
+
+```
+@society/shared-types · @society/shared-validators · @society/shared-ui-tokens
+@society/shared-ui-components · @society/shared-i18n · @society/shared-ui-assets
+@society/shared-nextjs-config
+```
+
+#### Security headers (applied to every route via `async headers()`)
+
+| Header | Value |
+|---|---|
+| `X-Frame-Options` | `DENY` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `X-XSS-Protection` | `1; mode=block` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
+
+#### `createNextConfig` factory
+
+`next.config.base.js` exports a **`createNextConfig(appDir, overrides?)`** factory. Calling it does two things synchronously at config-evaluation time (before any bundler starts):
+
+1. **Copies shared assets** — calls `copySharedAssets(appDir)` which uses `fs.cpSync` to copy all files from `@society/shared-ui-assets/assets/` into `<appDir>/public/`. This works for both **Turbopack** (`next dev --turbopack`) and **webpack** because it runs before either bundler initialises.
+2. **Returns the merged config** — merges `transpilePackages`, security headers, image patterns, and any app-specific overrides.
+
+#### Consuming an app's `next.config.ts`
+
+```ts
+import { createNextConfig } from '@society/shared-nextjs-config'
+
+export default createNextConfig(__dirname, {
+  // App-specific Next.js config overrides (optional)
+})
+```
+
+#### Tailwind preset chain
+
+```
+packages/shared-ui-tokens/tailwind.config.ts   ← Canonical design-token preset
+        │  presets: [societyPreset]
+        ├──► applications/owner-app/web/tailwind.config.ts
+        ├──► applications/admin-app/web/tailwind.config.ts
+        └──► applications/super-admin-app/web/tailwind.config.ts
+```
+
+Each web app's `tailwind.config.ts` sets `content` paths covering its own `src/` tree plus
+`packages/shared-ui-components/src/` so that classes used in shared components are never purged.
 
 ---
 

@@ -1,0 +1,27 @@
+{
+  "name": "@society/shared-ui-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Canonical Tailwind CSS design-token preset and Oat UI CSS variable overrides",
+  "main": "tailwind.config.js",
+  "files": [
+    "tailwind.config.js",
+    "tailwind.config.ts"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'Covered by root eslint.config.mjs'"
+  },
+  "peerDependencies": {
+    "tailwindcss": ">=3.4.0"
+  },
+  "keywords": [
+    "society",
+    "tailwind",
+    "design-tokens",
+    "theme",
+    "shared"
+  ],
+  "license": "MIT"
+}

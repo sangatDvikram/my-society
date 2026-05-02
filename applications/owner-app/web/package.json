@@ -1,0 +1,36 @@
+{
+  "name": "@society/owner-app-web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Owner-facing web dashboard — Next.js 15 + React 19 + Oat UI + Tailwind CSS",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@knadh/oat": "0.5.0",
+    "@society/shared-i18n": "*",
+    "@society/shared-nextjs-config": "*",
+    "@society/shared-types": "*",
+    "@society/shared-ui-assets": "*",
+    "@society/shared-ui-components": "*",
+    "@society/shared-ui-tokens": "*",
+    "@society/shared-validators": "*",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "postcss-import": "^16.1.1",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.7.0"
+  }
+}

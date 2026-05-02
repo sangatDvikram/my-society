@@ -8,14 +8,26 @@
 # -----------------------------------------------------------------------------
 node_modules/
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 .npm
+package-lock.json.bak
+
+# -----------------------------------------------------------------------------
+# Yarn Berry (4.x) — node-modules linker
+# -----------------------------------------------------------------------------
+# Commit these so anyone can clone and run without corepack:
+#   .yarn/releases/   ← Yarn binary (yarn-4.x.x.cjs)
+#   .yarn/plugins/    ← Any installed Yarn plugins
+#   .yarnrc.yml       ← Already tracked (not listed here)
+#
+# Ignore generated / cache artefacts:
 .yarn/cache
 .yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+yarn-debug.log*
+yarn-error.log*
 .pnp.*
-package-lock.json.bak
 
 # -----------------------------------------------------------------------------
 # Lerna / Monorepo
@@ -28,6 +40,12 @@ lerna-debug.log*
 # -----------------------------------------------------------------------------
 .nx/cache
 .nx/workspace-data
+
+# -----------------------------------------------------------------------------
+# ESLint / Prettier caches
+# -----------------------------------------------------------------------------
+.eslintcache
+.prettiercache
 
 # -----------------------------------------------------------------------------
 # Build artifacts (all packages / services)
@@ -66,6 +84,13 @@ backend/**/generated-pdfs/
 
 # TypeORM migrations auto-generated drafts
 backend/**/src/migrations/draft/
+
+# -----------------------------------------------------------------------------
+# Next.js (Web Dashboards)
+# -----------------------------------------------------------------------------
+.next/
+applications/**/web/.next/
+applications/**/web/out/
 
 # -----------------------------------------------------------------------------
 # Vite + React (Web Dashboards)

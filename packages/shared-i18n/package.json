@@ -1,0 +1,28 @@
+{
+  "name": "@society/shared-i18n",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared i18next translation strings (English, Hindi, Marathi) for all Society apps",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src/locales"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'Covered by root eslint.config.mjs'"
+  },
+  "peerDependencies": {
+    "i18next": ">=23.0.0"
+  },
+  "keywords": [
+    "society",
+    "i18n",
+    "translations",
+    "i18next",
+    "shared"
+  ],
+  "license": "MIT"
+}

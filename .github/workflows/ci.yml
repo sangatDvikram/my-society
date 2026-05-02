@@ -1,6 +1,7 @@
 # =============================================================================
 # Society Management and Logging System — Continuous Integration
 # Jobs: lint → type-check → test → sast (SonarCloud) → snyk
+# Package manager: Yarn 4.x (Berry) with node-modules linker
 # Nx affected is used so only changed packages are checked on every PR/push.
 # =============================================================================
 
@@ -40,17 +41,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: yarn
+          cache-dependency-path: yarn.lock
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Restore Nx cache
         uses: actions/cache@v4
         with:
           path: .nx/cache
-          key: nx-lint-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
-          restore-keys: nx-lint-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+          key: nx-lint-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: nx-lint-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
 
       - name: Lint affected packages
         run: |
@@ -59,7 +61,7 @@ jobs:
           else
             BASE="${{ github.event.before }}"
           fi
-          npx nx affected --target=lint --base=$BASE --parallel=5
+          yarn nx affected --target=lint --base=$BASE --parallel=5
 
   # ── 2. Type-check ─────────────────────────────────────────────────────────
   type-check:
@@ -73,17 +75,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: yarn
+          cache-dependency-path: yarn.lock
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Restore Nx cache
         uses: actions/cache@v4
         with:
           path: .nx/cache
-          key: nx-type-check-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
-          restore-keys: nx-type-check-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+          key: nx-type-check-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: nx-type-check-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
 
       - name: Type-check affected packages
         run: |
@@ -92,7 +95,7 @@ jobs:
           else
             BASE="${{ github.event.before }}"
           fi
-          npx nx affected --target=type-check --base=$BASE --parallel=5
+          yarn nx affected --target=type-check --base=$BASE --parallel=5
 
   # ── 3. Test ───────────────────────────────────────────────────────────────
   test:
@@ -106,17 +109,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: yarn
+          cache-dependency-path: yarn.lock
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Restore Nx cache
         uses: actions/cache@v4
         with:
           path: .nx/cache
-          key: nx-test-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
-          restore-keys: nx-test-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+          key: nx-test-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: nx-test-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
 
       - name: Test affected packages
         run: |
@@ -125,7 +129,7 @@ jobs:
           else
             BASE="${{ github.event.before }}"
           fi
-          npx nx affected --target=test --base=$BASE --parallel=5
+          yarn nx affected --target=test --base=$BASE --parallel=5
 
       - name: Upload coverage reports
         if: always()
@@ -167,10 +171,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: yarn
+          cache-dependency-path: yarn.lock
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Snyk — test all workspace packages
         uses: snyk/actions/node@master
@@ -182,6 +187,6 @@ jobs:
             --severity-threshold=high
             --org=${{ secrets.SNYK_ORG_ID }}
 
-      - name: npm audit (informational)
-        run: npm audit --audit-level=high
+      - name: yarn audit (informational)
+        run: yarn npm audit --all --severity high
         continue-on-error: true

@@ -1,0 +1,46 @@
+# =============================================================================
+# Prettier ignore — Society Management and Logging System
+# =============================================================================
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.expo/
+
+# Nx task-runner cache
+.nx/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Binary / generated static assets
+packages/shared-ui-assets/assets/
+
+# Yarn Berry artefacts
+.yarn/
+
+# Lock files (formatting breaks reproducibility)
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Infrastructure / config files that should not be auto-formatted
+*.tfstate
+*.tfstate.backup
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

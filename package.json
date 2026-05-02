@@ -2,6 +2,7 @@
   "name": "@society/root",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "yarn@4.14.1",
   "description": "Society Management and Logging System — Lerna monorepo root",
   "workspaces": [
     "applications/owner-app/mobile",
@@ -22,15 +23,31 @@
     "build": "lerna run build",
     "test": "lerna run test",
     "lint": "lerna run lint",
+    "lint:fix": "eslint . --fix",
     "type-check": "lerna run type-check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "clean": "lerna clean --yes"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jsx-a11y": "^6.10.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-native": "^4.1.0",
+    "globals": "^15.0.0",
     "lerna": "^8.x",
-    "nx": ">=17.0.0"
+    "nx": ">=17.0.0",
+    "prettier": "^3.4.0",
+    "prettier-plugin-tailwindcss": "^0.6.0",
+    "typescript-eslint": "^8.0.0"
   },
   "engines": {
     "node": ">=22.0.0",
-    "npm": ">=10.0.0"
+    "yarn": ">=4.0.0"
   }
 }
