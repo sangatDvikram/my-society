@@ -32,7 +32,7 @@
 
 The **Society Management and Logging System** is a multi-tenant SaaS platform that digitises the end-to-end operations of residential housing societies. It replaces paper-based visitor registers, manual maintenance tracking, and fragmented communication channels with a unified, auditable, and GDPR-compliant digital system.
 
-The platform is composed of **three client-facing applications**, each delivered as a **cross-platform mobile app (React Native)** and a **web dashboard (Vite + React)**:
+The platform is composed of **three client-facing applications**, each delivered as a **cross-platform mobile app (React Native)** and a **web dashboard (Next.js + React)**:
 
 | Application | Primary Audience |
 |---|---|
@@ -2848,11 +2848,12 @@ export class PhoneCryptoService {
 | Layer | Technology | Version (minimum) |
 |---|---|---|
 | Mobile App | React Native (Expo) | 0.74 |
-| Web Dashboard | Vite + React | Vite 5, React 18 |
+| Web Dashboard | Next.js + React | Next.js 15.x, React 19.2.0 |
 | **Mobile Styling** | **NativeWind** (Tailwind CSS for React Native) | **4.x** |
 | **Web Styling** | **Tailwind CSS** | **3.4** |
 | **Web UI Library** | **Oat UI (`@knadh/oat`)** | **0.5.x** |
 | State Management | Zustand (mobile) / TanStack Query (web) | — |
+| **Node.js Runtime** | **Node.js** (minimum LTS for all backend services) | **22.x** |
 | Backend Framework | NestJS | 10.x |
 | ORM | TypeORM | 0.3.x |
 | Database | PostgreSQL | 16 |
@@ -2886,7 +2887,7 @@ Each of the three applications (Owner, Admin, Super Admin) is structured as two 
 └───────────────────────┬──────────────────────────┬───────────────────┘
                         │                          │
           ┌─────────────▼──────────┐  ┌────────────▼──────────────┐
-          │   Mobile (React Native) │  │    Web (Vite + React)     │
+          │   Mobile (React Native) │  │   Web (Next.js + React)   │
           │                        │  │                           │
           │  Styling: NativeWind   │  │  Styling: Tailwind CSS    │
           │  (Tailwind in RN via   │  │  UI Library: Oat UI       │
@@ -2906,7 +2907,7 @@ Each of the three applications (Owner, Admin, Super Admin) is structured as two 
 
 #### 10.3.1 Web Applications — Tailwind CSS + Oat UI
 
-All three **web dashboards** (Vite + React) adopt a two-layer styling approach:
+All three **web dashboards** (Next.js + React) adopt a two-layer styling approach:
 
 | Layer | Tool | Role |
 |---|---|---|
@@ -2921,20 +2922,29 @@ npm install @knadh/oat
 npm install -D tailwindcss postcss autoprefixer
 ```
 
-**Entry point integration (`src/main.tsx`):**
+**Root layout integration (`src/app/layout.tsx`):**
 
 ```typescript
 // Import Oat UI base styles first — styles semantic HTML elements globally
 import '@knadh/oat/oat.min.css';
 
-// Import Tailwind utilities second — overrides and extensions
-import './index.css'; // contains @tailwind base; @tailwind components; @tailwind utilities;
+// Import Tailwind utilities and Oat UI token overrides
+import './globals.css'; // contains @tailwind base; @tailwind components; @tailwind utilities;
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+import type { Metadata } from 'next';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
+export const metadata: Metadata = {
+  title: 'My Society — Owner Portal',
+  description: 'Manage your flat, pay maintenance, log visitors.',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
 ```
 
 **Why this layering works:** Oat UI applies its styles to bare semantic elements (`button`, `input`, `dialog`, etc.) which React renders as standard HTML. Tailwind utility classes on the same elements are applied after Oat UI in the CSS cascade, providing clean, predictable overrides. No class conflicts arise because Oat UI does not use class-based styling for its base aesthetics.
@@ -3058,8 +3068,8 @@ export default config;
 Oat UI's own CSS custom properties (`--color-accent`, `--border-radius`, etc.) are overridden in each web app's `index.css` to match the values defined above, ensuring the Oat UI base styles and Tailwind utilities render with an identical visual language.
 
 ```css
-/* applications/owner-app/web/src/index.css */
-@import '@knadh/oat/oat.min.css';   /* Oat UI base — must come first */
+/* applications/owner-app/web/src/app/globals.css */
+/* Note: @knadh/oat/oat.min.css is imported in layout.tsx before this file */
 
 /* Override Oat UI CSS variables to match shared design tokens */
 :root {
@@ -3102,14 +3112,16 @@ alankapuri-my-society/                  ← git root
 │   │   │   ├── tailwind.config.ts      ← extends packages/shared-ui-tokens
 │   │   │   ├── babel.config.js         ← NativeWind Babel plugin
 │   │   │   └── package.json
-│   │   └── web/                        ← Vite + React + Tailwind CSS + Oat UI
+│   │   └── web/                        ← Next.js + React + Tailwind CSS + Oat UI
 │   │       ├── src/
-│   │       │   ├── pages/
+│   │       │   ├── app/                ← Next.js App Router root
+│   │       │   │   ├── layout.tsx      ← Root layout: Oat UI + globals.css imports
+│   │       │   │   ├── page.tsx        ← Root page (redirects to /dashboard)
+│   │       │   │   └── globals.css     ← Oat UI token overrides + Tailwind directives
 │   │       │   ├── components/
-│   │       │   ├── hooks/
-│   │       │   ├── index.css           ← @knadh/oat import + Tailwind directives
-│   │       │   └── main.tsx            ← imports index.css; bootstraps React
+│   │       │   └── hooks/
 │   │       ├── tailwind.config.ts      ← extends packages/shared-ui-tokens
+│   │       ├── next.config.ts          ← Next.js configuration
 │   │       ├── postcss.config.js
 │   │       └── package.json
 │   │
@@ -3118,8 +3130,9 @@ alankapuri-my-society/                  ← git root
 │   │   │   ├── tailwind.config.ts      ← extends packages/shared-ui-tokens
 │   │   │   ├── babel.config.js
 │   │   │   └── package.json
-│   │   └── web/                        ← Vite + React + Tailwind CSS + Oat UI
+│   │   └── web/                        ← Next.js + React + Tailwind CSS + Oat UI
 │   │       ├── tailwind.config.ts      ← extends packages/shared-ui-tokens
+│   │       ├── next.config.ts          ← Next.js configuration
 │   │       ├── postcss.config.js
 │   │       └── package.json
 │   │
@@ -3128,8 +3141,9 @@ alankapuri-my-society/                  ← git root
 │       │   ├── tailwind.config.ts      ← extends packages/shared-ui-tokens
 │       │   ├── babel.config.js
 │       │   └── package.json
-│       └── web/                        ← Vite + React + Tailwind CSS + Oat UI
+│       └── web/                        ← Next.js + React + Tailwind CSS + Oat UI
 │           ├── tailwind.config.ts      ← extends packages/shared-ui-tokens
+│           ├── next.config.ts          ← Next.js configuration
 │           ├── postcss.config.js
 │           └── package.json
 │
@@ -3400,7 +3414,7 @@ alankapuri-my-society/                  ← git root
     │   └── package.json
     ├── shared-ui-components/           ← Cross-platform UI component library
     │   ├── src/
-    │   │   ├── web/                    ← React components for Vite + React apps
+    │   │   ├── web/                    ← React components for Next.js + React apps
     │   │   │   │                          Wrap Oat UI semantic elements; styled with Tailwind
     │   │   │   ├── Button.tsx          ← e.g. <button className="..."> + Oat UI auto-styling
     │   │   │   ├── Card.tsx            ← <article> wrapper with Tailwind spacing utilities
@@ -3471,7 +3485,7 @@ packages/shared-ui-tokens
         │                                                          │
         ▼  (web apps — tailwind.config.ts preset)                 ▼  (mobile apps — tailwind.config.ts preset)
   owner-app/web          admin-app/web      super-admin-app/web   owner-app/mobile   admin-app/mobile   super-admin-app/mobile
-  (Tailwind + Oat UI)    (Tailwind + Oat UI)(Tailwind + Oat UI)   (NativeWind)       (NativeWind)       (NativeWind)
+  (Next.js + Oat UI)     (Next.js + Oat UI) (Next.js + Oat UI)    (NativeWind)       (NativeWind)       (NativeWind)
 
 
 packages/shared-ui-components
@@ -3659,7 +3673,7 @@ Merge to main
 | **MediaAsset** | A TypeORM entity (table `media_assets`) that is the authoritative registry for every image uploaded through the `media-service`; stores the original S3 key, dimensions, MIME type, context tag, society scope, and a JSONB map of all generated `ImageVariant` objects |
 | **Multi-tenant** | Single deployment serving multiple distinct societies with data isolation |
 | **NativeWind** | Library that brings Tailwind CSS utility classes to React Native via a Babel/Metro plugin that transforms class strings into React Native `StyleSheet` objects at build time |
-| **Oat UI** | Ultra-lightweight, zero-dependency HTML/CSS/JS UI library (`@knadh/oat`, ~8 KB min+gz) that styles semantic HTML elements automatically; used in all Vite + React web dashboards |
+| **Oat UI** | Ultra-lightweight, zero-dependency HTML/CSS/JS UI library (`@knadh/oat`, ~8 KB min+gz) that styles semantic HTML elements automatically; used in all Next.js + React web dashboards |
 | **Object Lock** | AWS S3 feature that enforces WORM (Write Once Read Many) storage; used in COMPLIANCE mode on published audit PDFs to satisfy the 7-year legal retention requirement |
 | **order_id** | Razorpay-generated identifier for a payment order; used to track the full payment lifecycle |
 | **OTP** | One-Time Password — time-limited numeric code sent via SMS/WhatsApp |
@@ -3688,7 +3702,7 @@ Merge to main
 | **SHA-256** | Secure Hash Algorithm producing a 256-bit digest; used to compute the tamper-detection checksum of every generated audit PDF |
 | **Sharp** | High-performance Node.js image processing library (built on libvips); used by `media-service` to resize images, convert formats (JPEG → WebP, PNG → WebP, etc.), apply quality compression, centre-crop, and generate Gaussian blurs for LQIP placeholders — all on-demand without pre-generating variants |
 | **SocietyEvent** | A community event created by a flat owner or Admin (e.g. festival, tournament, movie night); discoverable by all owners in the same society via the event feed; may be linked to a `FacilityBooking` for a venue; supports RSVP, media uploads, and Admin pinning |
-| **Tailwind CSS** | Utility-first CSS framework; used directly in Vite + React web dashboards and via NativeWind in React Native mobile apps |
+| **Tailwind CSS** | Utility-first CSS framework; used directly in Next.js + React web dashboards and via NativeWind in React Native mobile apps |
 | **TOTP** | Time-based One-Time Password (e.g. Google Authenticator) — used for Super Admin 2FA |
 | **Tenancy** | A period during which a flat is rented out to a tenant; modelled as a `FlatRental` record linking a `Flat`, a `TenantProfile`, an owner, rental terms, and associated documents |
 | **Thumbnail** | A reduced-resolution preview image generated from an uploaded photo (480×480 px WebP via Sharp) or video (frame at 1-second mark via FFmpeg); stored in S3 alongside the original; used in event feed cards and gallery grids |
@@ -3776,7 +3790,7 @@ RAZORPAY_WEBHOOK_SECRET=XXXXXXXXXXXXXXXXXXXXXXX
 ┌─────────────────────────────────────────────────────────────────────┐
 │  STEP 2: Client-side Checkout                                        │
 │                                                                      │
-│  Web (Vite + React):                                                 │
+│  Web (Next.js + React):                                              │
 │  const rzp = new window.Razorpay({                                   │
 │    key: keyId,                                                       │
 │    order_id: orderId,                                                │
@@ -4784,4 +4798,4 @@ AdminJS exposes powerful CRUD actions by default. The following restrictions are
 
 ---
 
-*End of Document — Society Management and Logging System PRD v1.9.0*
+*End of Document — Society Management and Logging System PRD v1.0.0*

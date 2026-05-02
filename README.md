@@ -2,7 +2,7 @@
 
 > A multi-tenant SaaS platform that digitises the end-to-end operations of residential housing societies — visitor logging, maintenance, payments, rentals, facilities, events, and annual financial audits.
 
-**PRD Version:** 1.0.0 · **Status:** Draft · **Stack:** Lerna monorepo · NestJS · React Native · Vite + React · PostgreSQL · AWS
+**PRD Version:** 1.0.0 · **Status:** Draft · **Stack:** Lerna monorepo · NestJS · React Native · Next.js + React · PostgreSQL · AWS
 
 ---
 
@@ -30,7 +30,7 @@ Key design principles:
 - **Multi-tenancy** — a single deployment serves multiple societies; data is isolated at the `society_id` level throughout the database and API layers.
 - **GDPR compliance** — soft-delete with 90-day anonymisation, AES-256-GCM encryption for all PII (phone numbers, PAN, bank account numbers), and explicit data-erasure workflows.
 - **Security-first** — phone numbers stored as dual columns (AES ciphertext + HMAC-SHA256 hash for lookups), AWS KMS for key management, and S3 pre-signed URLs for all document access.
-- **Cross-platform** — every user-facing application ships as both a **React Native (Expo)** mobile app and a **Vite + React** web dashboard.
+- **Cross-platform** — every user-facing application ships as both a **React Native (Expo)** mobile app and a **Next.js + React** web dashboard.
 
 ---
 
@@ -40,9 +40,9 @@ Key design principles:
 
 | Application | Audience | Platforms |
 |---|---|---|
-| **Owner App** | Flat residents / owners | React Native (Expo) + Vite + React |
-| **Admin App** | Society committee members | React Native (Expo) + Vite + React |
-| **Super Admin App** | Platform operators | React Native (Expo) + Vite + React |
+| **Owner App** | Flat residents / owners | React Native (Expo) + Next.js + React |
+| **Admin App** | Society committee members | React Native (Expo) + Next.js + React |
+| **Super Admin App** | Platform operators | React Native (Expo) + Next.js + React |
 
 All six app packages share a design token system via `packages/shared-ui-tokens` (a single Tailwind config extended by every app). Web apps additionally use **Oat UI** (`@knadh/oat`) for semantic HTML styling; mobile apps use **NativeWind** to consume the same Tailwind tokens natively.
 
@@ -74,8 +74,9 @@ All services are NestJS applications containerised with Docker and orchestrated 
 | Layer | Technology | Version |
 |---|---|---|
 | Mobile | React Native (Expo) + NativeWind | RN 0.74 / NW 4.x |
-| Web | Vite + React + Tailwind CSS + Oat UI | Vite 5 / React 18 / TW 3.4 |
+| Web | Next.js + React + Tailwind CSS + Oat UI | Next.js 15.x / React 19.2.0 / TW 3.4 |
 | Backend | NestJS + TypeORM | NestJS 10.x / TypeORM 0.3.x |
+| Node.js Runtime | Node.js (minimum LTS for all services) | 22.x |
 | Database | PostgreSQL | 16 |
 | Cache / Queues | Redis + BullMQ | Redis 7.x / BullMQ 5.x |
 | Admin Panel | AdminJS (`@adminjs/nestjs`, `@adminjs/typeorm`) | 7.x |
@@ -115,7 +116,7 @@ All services are NestJS applications containerised with Docker and orchestrated 
 
 ### Prerequisites
 
-- Node.js ≥ 20.x
+- Node.js ≥ 22.x (LTS)
 - npm ≥ 10.x
 - Docker + Docker Compose
 - AWS CLI (configured with appropriate credentials for S3, KMS, CloudFront)
@@ -180,9 +181,9 @@ npx lerna run test --scope=@society/admin-service
 ```
 alankapuri-my-society/
 ├── applications/
-│   ├── owner-app/          ← mobile/ (RN + Expo) + web/ (Vite + React)
-│   ├── admin-app/          ← mobile/ (RN + Expo) + web/ (Vite + React)
-│   └── super-admin-app/    ← mobile/ (RN + Expo) + web/ (Vite + React)
+│   ├── owner-app/          ← mobile/ (RN + Expo) + web/ (Next.js + React)
+│   ├── admin-app/          ← mobile/ (RN + Expo) + web/ (Next.js + React)
+│   └── super-admin-app/    ← mobile/ (RN + Expo) + web/ (Next.js + React)
 ├── backend/
 │   ├── api-gateway/        ← Auth, routing, webhook guards
 │   ├── owner-service/      ← Owner-facing APIs

@@ -1,0 +1,76 @@
+# CODEOWNERS
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Each line is a pattern followed by one or more owners.
+# The last matching pattern takes the highest precedence.
+# Owners are notified and their review is required for any pull request
+# that modifies matching files.
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Global fallback — catch anything not matched by a more specific rule below
+# ──────────────────────────────────────────────────────────────────────────────
+*                                       @sangatDvikram
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Repository configuration & CI/CD
+# ──────────────────────────────────────────────────────────────────────────────
+/.github/                               @sangatDvikram
+/lerna.json                             @sangatDvikram
+/package.json                           @sangatDvikram
+/.gitignore                             @sangatDvikram
+/README.md                              @sangatDvikram
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Documentation
+# ──────────────────────────────────────────────────────────────────────────────
+/docs/                                  @sangatDvikram
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Shared packages — changes here affect every app; require extra scrutiny
+# ──────────────────────────────────────────────────────────────────────────────
+/packages/                              @sangatDvikram
+/packages/shared-types/                 @sangatDvikram
+/packages/shared-validators/            @sangatDvikram
+/packages/shared-ui-tokens/             @sangatDvikram
+/packages/shared-ui-components/         @sangatDvikram
+/packages/shared-i18n/                  @sangatDvikram
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Backend microservices
+# ──────────────────────────────────────────────────────────────────────────────
+/backend/                               @sangatDvikram
+
+# API Gateway — auth, JWT/OTP, request routing
+/backend/api-gateway/                   @sangatDvikram
+
+# Owner Service — flats, maintenance, visitor logs, payments, rentals, events
+/backend/owner-service/                 @sangatDvikram
+
+# Admin Service — societies, staff, announcements, audit PDFs, AdminJS panel
+/backend/admin-service/                 @sangatDvikram
+
+# Super Admin Service — onboarding, subscriptions, feature flags, KMS rotation
+/backend/super-admin-service/           @sangatDvikram
+
+# Media Service — image upload, Sharp transforms, CloudFront variant caching
+/backend/media-service/                 @sangatDvikram
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Client applications
+# ──────────────────────────────────────────────────────────────────────────────
+/applications/                          @sangatDvikram
+
+# Owner App
+/applications/owner-app/                @sangatDvikram
+/applications/owner-app/web/            @sangatDvikram
+/applications/owner-app/mobile/         @sangatDvikram
+
+# Admin App
+/applications/admin-app/                @sangatDvikram
+/applications/admin-app/web/            @sangatDvikram
+/applications/admin-app/mobile/         @sangatDvikram
+
+# Super Admin App
+/applications/super-admin-app/          @sangatDvikram
+/applications/super-admin-app/web/      @sangatDvikram
+/applications/super-admin-app/mobile/   @sangatDvikram
