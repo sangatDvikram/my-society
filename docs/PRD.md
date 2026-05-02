@@ -3404,6 +3404,19 @@ alankapuri-my-society/                  ← git root
 │       └── package.json
 │
 └── packages/                           ← Shared internal libraries
+    ├── shared-ui-assets/               ← ★ Centralised static assets (favicons, icons, manifests)
+    │   ├── assets/                     ← All static files relocated from root /public/
+    │   │   ├── favicon.ico
+    │   │   ├── favicon-16x16.png
+    │   │   ├── favicon-32x32.png
+    │   │   ├── favicon-96x96.png
+    │   │   ├── apple-icon*.png         ← Apple touch icons (57–180 px)
+    │   │   ├── android-icon*.png       ← Android launcher icons (36–192 px)
+    │   │   ├── ms-icon*.png            ← Microsoft tile icons (70–310 px)
+    │   │   ├── manifest.json           ← PWA web-app manifest
+    │   │   └── browserconfig.xml       ← IE/Edge browser config (MS tile)
+    │   ├── index.js                    ← Exports resolved assetsPath for consuming apps
+    │   └── package.json               ← @society/shared-ui-assets
     ├── shared-types/                   ← TypeScript interfaces & enums
     ├── shared-validators/              ← Zod schemas shared between FE & BE
     ├── shared-ui-tokens/               ← Single source of truth for the design token system
@@ -3457,7 +3470,8 @@ alankapuri-my-society/                  ← git root
     "backend/owner-service",
     "backend/admin-service",
     "backend/super-admin-service",
-    "packages/*"                          // picks up shared-ui-tokens, shared-ui-components, etc.
+    "backend/media-service",
+    "packages/*"                          // picks up shared-ui-assets, shared-ui-tokens, shared-ui-components, etc.
   ],
   "command": {
     "run": {
@@ -3472,11 +3486,20 @@ alankapuri-my-society/                  ← git root
 }
 ```
 
-### 11.3 Shared UI Package Dependency Graph
+### 11.3 Shared Package Dependency Graph
 
-The diagram below shows how the two new shared UI packages relate to every application package:
+The diagram below shows how all shared packages relate to every application package:
 
 ```
+packages/shared-ui-assets
+  (assets/ — favicons, icons, manifest, browserconfig)
+        │
+        │  referenced via resolved assetsPath (workspace symlink)
+        ├──► owner-app/web          (Next.js public/ copy or next.config.ts staticDir)
+        ├──► admin-app/web          (Next.js public/ copy or next.config.ts staticDir)
+        └──► super-admin-app/web    (Next.js public/ copy or next.config.ts staticDir)
+
+
 packages/shared-ui-tokens
   (tailwind.config.ts + oat-overrides.css)
         │
@@ -3505,6 +3528,7 @@ packages/shared-ui-components
 ```json
 {
   "dependencies": {
+    "@society/shared-ui-assets":     "*",
     "@society/shared-ui-tokens":     "*",
     "@society/shared-ui-components": "*",
     "@society/shared-types":         "*",
@@ -3515,6 +3539,135 @@ packages/shared-ui-components
 ```
 
 Lerna resolves these local workspace references via npm workspaces symlinks — no publishing step is needed during local development.
+
+---
+
+### 11.4 TypeScript Configuration Strategy
+
+All TypeScript configuration is organised in a two-level hierarchy:
+
+| File | Role |
+|---|---|
+| `tsconfig.base.json` (repo root) | Single source of truth for strict compiler options shared by every package and service. Does **not** set `module`, `moduleResolution`, or `lib` — each package overrides those. |
+| `<package>/tsconfig.json` | Package-level config; extends the base and adds runtime-specific overrides. |
+| `<nestjs-service>/tsconfig.build.json` | Production build config; extends the service tsconfig and additionally excludes all `*.spec.ts` / `*.e2e-spec.ts` test files. Used by `nest build`. |
+
+#### Base options (`tsconfig.base.json`)
+
+```jsonc
+{
+  "compilerOptions": {
+    "target": "ES2022",          // Node.js 22 LTS natively supports ES2022
+    "strict": true,              // Enables all strict-* flags
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,   // Required by NestJS + TypeORM
+    "emitDecoratorMetadata": true     // Required by NestJS + TypeORM
+  }
+}
+```
+
+#### Per-package overrides
+
+| Package / Service type | `module` | `moduleResolution` | `jsx` | `noEmit` |
+|---|---|---|---|---|
+| **NestJS services** (`backend/*`) | `commonjs` | `node` | — | `false` |
+| **Next.js web apps** (`applications/*/web`) | `esnext` | `bundler` | `preserve` | `true` |
+| **React Native / Expo** (`applications/*/mobile`) | `esnext` | `bundler` | `react-native` | `true` |
+| **Shared TS packages** (`packages/shared-types`, `shared-validators`, `shared-i18n`) | `commonjs` | `node` | — | `false` |
+| **`shared-ui-components`** | `esnext` | `bundler` | `react-jsx` | `false` |
+| **`shared-ui-tokens`** | `commonjs` | `node` | — | `false` |
+| **`shared-ui-assets`** (JS-only) | `commonjs` | `node` | — | `true` |
+
+#### TypeScript path aliases
+
+All Next.js web apps and React Native mobile apps declare `paths` in their `tsconfig.json` pointing to the monorepo workspace packages. This gives IDEs full go-to-source navigation without requiring a separate build step:
+
+```jsonc
+// Example — applications/owner-app/web/tsconfig.json
+"paths": {
+  "@/*":                        ["./src/*"],
+  "@society/shared-types":      ["../../../packages/shared-types/src"],
+  "@society/shared-validators": ["../../../packages/shared-validators/src"],
+  "@society/shared-ui-tokens":  ["../../../packages/shared-ui-tokens"],
+  "@society/shared-ui-components": ["../../../packages/shared-ui-components/src"],
+  "@society/shared-i18n":       ["../../../packages/shared-i18n/src"],
+  "@society/shared-ui-assets":  ["../../../packages/shared-ui-assets/index.js"]
+}
+```
+
+> **Note:** At runtime the path aliases are resolved by Metro (Expo) or webpack/SWC (Next.js) using the npm workspaces symlinks in `node_modules/@society/*`. The `paths` block in tsconfig serves only the TypeScript language server.
+
+---
+
+### 11.5 Nx Task-Runner Configuration
+
+`nx.json` at the repository root enables **local computation caching** for all Lerna-managed tasks. Lerna 8.x delegates task orchestration to Nx automatically when `nx.json` is present — no separate Nx installation is required beyond adding `nx` as a root `devDependency`.
+
+#### Global settings
+
+| Key | Value | Rationale |
+|---|---|---|
+| `defaultBase` | `"develop"` | Branch used by `nx affected` to determine changed packages |
+| `parallel` | `5` | Matches `lerna.json → command.run.concurrency`; controls concurrent task execution |
+| `cacheDirectory` | `".nx/cache"` | Local disk cache; git-ignored via `.gitignore` |
+
+#### Named inputs (`namedInputs`)
+
+Named inputs are reusable file-set groups referenced in `targetDefaults`. They drive precise cache-key computation.
+
+| Named input | Composition | Purpose |
+|---|---|---|
+| `globalConfig` | `tsconfig.base.json`, `package.json`, `lerna.json`, `nx.json` | Root-level files that affect every package — any change invalidates all caches |
+| `projectFileSet` | All files under `{projectRoot}/` except `dist/`, `.next/`, `coverage/`, `.tsbuildinfo`, `node_modules/` | Per-project source files with generated artefacts excluded |
+| `default` | `projectFileSet` + `globalConfig` | Full cache key for development-mode targets (`lint`, `type-check`, `test`) |
+| `production` | `default` minus all `*.spec.ts`, `*.test.ts`, `test/**`, `__tests__/**` | Build cache is not invalidated by test-only changes |
+
+The `^` prefix on an input name (e.g. `"^production"`) means _"include the matching inputs of every upstream workspace dependency"_, enabling correct transitive cache invalidation.
+
+#### Target defaults (`targetDefaults`)
+
+| Target | `cache` | `dependsOn` | `inputs` | `outputs` |
+|---|---|---|---|---|
+| `build` | ✅ | `["^build"]` | `production`, `^production` | `{projectRoot}/dist`, `{projectRoot}/.next` |
+| `test` | ✅ | — | `default`, `^production` | `{projectRoot}/coverage` |
+| `lint` | ✅ | — | `default` + root ESLint config files | _(none — exit-code cached)_ |
+| `type-check` | ✅ | — | `default`, `^production` | _(none — exit-code cached)_ |
+| `start:dev` | ❌ | — | — | — |
+
+**Key design decisions:**
+
+- **`build → dependsOn: ["^build"]`** — Ensures all workspace dependencies are compiled before a consumer package is built, maintaining correct build ordering across the dependency graph.
+- **`build → inputs: production`** — Changing only a test file (e.g. adding a new `*.spec.ts`) does not bust the build cache for that package, saving CI time.
+- **`build → outputs: [dist, .next]`** — Nx stores whichever of these directories exists after the task completes. NestJS services write to `dist/`; Next.js apps write to `.next/`. React Native and `shared-ui-assets` emit nothing (those packages use `noEmit: true`).
+- **`test / lint / type-check → outputs: []`** — These targets produce no artefact files. Nx caches the terminal output and exit code, replaying them on a cache hit to report pass/fail instantly without re-running the process.
+- **`lint → extra ESLint config inputs`** — Root-level `.eslintrc.*` / `eslint.config.*` files are listed explicitly so that tightening a lint rule invalidates every package's lint cache. Per-package ESLint overrides are already covered by `projectFileSet`.
+
+#### Usage
+
+```bash
+# Run all targets, with Nx providing task ordering and cache
+npx lerna run build --stream
+npx lerna run test  --stream
+
+# Nx affected (only packages changed since develop)
+npx nx affected --target=build  --base=develop
+npx nx affected --target=test   --base=develop
+
+# Inspect cache hits/misses
+npx nx show project @society/owner-service
+```
 
 ---
 
@@ -3584,14 +3737,13 @@ spec:
 ### 12.3 CI/CD Pipeline
 
 ```
-PR opened
+PR opened / push to main|develop
   │
-  ├── Lint (ESLint + Prettier)
-  ├── Type-check (tsc --noEmit)
-  ├── Unit tests (Jest) — affected packages only (Lerna --since)
-  ├── Integration tests (Docker Compose with test DB)
-  ├── SAST (SonarQube)
-  └── Dependency audit (Snyk)
+  ├── lint        (ESLint + Prettier)          — nx affected, parallel=5, Nx cache
+  ├── type-check  (tsc --noEmit)               — nx affected, parallel=5, Nx cache
+  ├── test        (Jest, with coverage)        — nx affected, parallel=5, Nx cache
+  ├── sast        (SonarCloud)                 — runs after lint+type-check+test; consumes coverage artefacts
+  └── snyk        (Snyk + npm audit)           — all workspace packages, severity-threshold=high
 
 Merge to main
   │
@@ -3599,6 +3751,43 @@ Merge to main
   ├── Push to AWS ECR (tagged with git SHA)
   ├── Helm upgrade --install (per service)
   └── Smoke tests (k6 script against staging)
+```
+
+#### CI workflow file — `.github/workflows/ci.yml`
+
+| Job | Runner | Key actions | Cache |
+|---|---|---|---|
+| `lint` | `ubuntu-latest` | `nx affected --target=lint` | `.nx/cache` restored from `actions/cache` |
+| `type-check` | `ubuntu-latest` | `nx affected --target=type-check` | `.nx/cache` restored from `actions/cache` |
+| `test` | `ubuntu-latest` | `nx affected --target=test`; coverage uploaded as `coverage-reports` artefact | `.nx/cache` restored from `actions/cache` |
+| `sast` | `ubuntu-latest` | `SonarSource/sonarcloud-github-action@v3`; downloads coverage artefact | — |
+| `snyk` | `ubuntu-latest` | `snyk/actions/node@master --all-projects`; `npm audit --audit-level=high` | — |
+
+**Affected-package base ref logic:**
+- **PR events** → `origin/<base_ref>` (the PR target branch)
+- **Push events** → `github.event.before` (the commit SHA before the push)
+
+This ensures only the packages touched by each PR or commit are linted, type-checked, and tested — greatly reducing CI runtime as the monorepo grows.
+
+#### Required GitHub repository secrets
+
+| Secret | Used by | How to obtain |
+|---|---|---|
+| `GITHUB_TOKEN` | `sast` | Automatically provided by GitHub Actions — no setup needed |
+| `SONAR_TOKEN` | `sast` | SonarCloud → My Account → Security → Generate token |
+| `SNYK_TOKEN` | `snyk` | Snyk dashboard → Account Settings → API token |
+| `SNYK_ORG_ID` | `snyk` | Snyk dashboard → Settings → Organisation ID |
+
+#### SonarCloud configuration — `sonar-project.properties`
+
+The root `sonar-project.properties` file configures the SonarCloud scan. Replace the placeholder values with your SonarCloud organisation slug and project key before the first CI run:
+
+```properties
+sonar.organization=<YOUR_SONAR_ORG>
+sonar.projectKey=<YOUR_SONAR_PROJECT_KEY>
+sonar.sources=applications,backend,packages
+sonar.javascript.lcov.reportPaths=coverage-reports/**/lcov.info
+sonar.typescript.tsconfigPaths=tsconfig.base.json
 ```
 
 ### 12.4 Multi-Tenancy & Data Isolation

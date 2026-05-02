@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  //
+  // ─── @society/shared-ui-components ───────────────────────────────────────
+  // Cross-platform UI component library with three sub-directories:
+  //   src/web/    — React components (Next.js + Oat UI)
+  //   src/mobile/ — React Native components (NativeWind)
+  //   src/shared/ — Platform-agnostic hooks and constants
+  //
+  // jsx: "react-jsx" uses the React 17+ automatic JSX transform (compatible
+  // with React 19 / React Native 0.74 — both ship the jsx-runtime).
+  // moduleResolution: "bundler" enables subpath exports and matches what
+  // consuming apps use, giving consistent type resolution across the graph.
+  // declaration: true emits .d.ts files so apps get full IntelliSense.
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "dom", "dom.iterable"],
+    "jsx": "react-jsx",
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

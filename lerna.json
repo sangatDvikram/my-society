@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "version": "independent",
+  "npmClient": "npm",
+  "packages": [
+    "applications/owner-app/mobile",
+    "applications/owner-app/web",
+    "applications/admin-app/mobile",
+    "applications/admin-app/web",
+    "applications/super-admin-app/mobile",
+    "applications/super-admin-app/web",
+    "backend/api-gateway",
+    "backend/owner-service",
+    "backend/admin-service",
+    "backend/super-admin-service",
+    "backend/media-service",
+    "packages/*"
+  ],
+  "command": {
+    "run": {
+      "concurrency": 5,
+      "stream": true
+    },
+    "publish": {
+      "conventionalCommits": true,
+      "message": "chore(release): publish"
+    }
+  }
+}

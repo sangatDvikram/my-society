@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  //
+  // ─── api-gateway (NestJS — CommonJS) ─────────────────────────────────────
+  // Auth, OTP/JWT, TOTP 2FA, rate-limiting, request proxying to downstream
+  // services, webhook HMAC-SHA256 signature guard.
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "removeComments": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts", "**/*e2e-spec.ts"]
+}

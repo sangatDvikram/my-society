@@ -1,0 +1,87 @@
+{
+  "$schema": "node_modules/nx/schemas/nx-schema.json",
+
+  "defaultBase": "develop",
+
+  "parallel": 5,
+
+  "cacheDirectory": ".nx/cache",
+
+  "namedInputs": {
+    "globalConfig": [
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/lerna.json",
+      "{workspaceRoot}/nx.json"
+    ],
+
+    "projectFileSet": [
+      "{projectRoot}/**/*",
+      "!{projectRoot}/dist/**/*",
+      "!{projectRoot}/.next/**/*",
+      "!{projectRoot}/coverage/**/*",
+      "!{projectRoot}/*.tsbuildinfo",
+      "!{projectRoot}/dist/.tsbuildinfo",
+      "!{projectRoot}/.next/cache/.tsbuildinfo",
+      "!{projectRoot}/node_modules/**/*"
+    ],
+
+    "default": [
+      "projectFileSet",
+      "globalConfig"
+    ],
+
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.spec.ts",
+      "!{projectRoot}/**/*.spec.tsx",
+      "!{projectRoot}/**/*.e2e-spec.ts",
+      "!{projectRoot}/**/*.test.ts",
+      "!{projectRoot}/**/*.test.tsx",
+      "!{projectRoot}/test/**/*",
+      "!{projectRoot}/**/__tests__/**/*"
+    ]
+  },
+
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "outputs": [
+        "{projectRoot}/dist",
+        "{projectRoot}/.next"
+      ]
+    },
+
+    "test": {
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": [
+        "{projectRoot}/coverage"
+      ]
+    },
+
+    "lint": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.js",
+        "{workspaceRoot}/.eslintrc.cjs",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/.eslintignore"
+      ]
+    },
+
+    "type-check": {
+      "cache": true,
+      "inputs": ["default", "^production"]
+    },
+
+    "start:dev": {
+      "cache": false
+    }
+  }
+}

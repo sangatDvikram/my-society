@@ -1,0 +1,187 @@
+# =============================================================================
+# Society Management and Logging System — Continuous Integration
+# Jobs: lint → type-check → test → sast (SonarCloud) → snyk
+# Nx affected is used so only changed packages are checked on every PR/push.
+# =============================================================================
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, develop]
+
+# Cancel in-flight runs for the same ref when a newer push arrives.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+# ---------------------------------------------------------------------------
+# Helper: compute the Nx affected base ref once and reuse it across steps.
+# PR  → compare against the PR target branch (e.g. origin/develop)
+# Push → compare against the SHA before the push (github.event.before)
+# ---------------------------------------------------------------------------
+
+jobs:
+  # ── 1. Lint ───────────────────────────────────────────────────────────────
+  lint:
+    name: Lint (ESLint + Prettier)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history required for nx affected
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-lint-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: nx-lint-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+
+      - name: Lint affected packages
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE="origin/${{ github.base_ref }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          npx nx affected --target=lint --base=$BASE --parallel=5
+
+  # ── 2. Type-check ─────────────────────────────────────────────────────────
+  type-check:
+    name: Type-check (tsc --noEmit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-type-check-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: nx-type-check-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+
+      - name: Type-check affected packages
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE="origin/${{ github.base_ref }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          npx nx affected --target=type-check --base=$BASE --parallel=5
+
+  # ── 3. Test ───────────────────────────────────────────────────────────────
+  test:
+    name: Unit Tests (Jest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-test-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: nx-test-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+
+      - name: Test affected packages
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE="origin/${{ github.base_ref }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          npx nx affected --target=test --base=$BASE --parallel=5
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: '**/coverage/'
+          retention-days: 7
+
+  # ── 4. SAST — SonarCloud ──────────────────────────────────────────────────
+  sast:
+    name: SAST (SonarCloud)
+    runs-on: ubuntu-latest
+    needs: [lint, type-check, test]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # shallow clones break SonarCloud blame data
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports
+          path: coverage-reports
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # PR decoration
+          SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}
+
+  # ── 5. Snyk Dependency Scan ───────────────────────────────────────────────
+  snyk:
+    name: Snyk Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Snyk — test all workspace packages
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: >-
+            --all-projects
+            --severity-threshold=high
+            --org=${{ secrets.SNYK_ORG_ID }}
+
+      - name: npm audit (informational)
+        run: npm audit --audit-level=high
+        continue-on-error: true

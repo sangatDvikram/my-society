@@ -1,5 +1,7 @@
 # Society Management and Logging System
 
+[![CI](https://github.com/<ORG>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<ORG>/<REPO>/actions/workflows/ci.yml)
+
 > A multi-tenant SaaS platform that digitises the end-to-end operations of residential housing societies — visitor logging, maintenance, payments, rentals, facilities, events, and annual financial audits.
 
 **PRD Version:** 1.0.0 · **Status:** Draft · **Stack:** Lerna monorepo · NestJS · React Native · Next.js + React · PostgreSQL · AWS
@@ -62,10 +64,12 @@ All services are NestJS applications containerised with Docker and orchestrated 
 
 | Package | Contents |
 |---|---|
+| `packages/shared-ui-assets` | Centralised static assets — favicons, app icons, PWA manifest, browser config; referenced by all apps via workspace symlink |
 | `packages/shared-types` | TypeScript interfaces and enums consumed by all services and apps |
 | `packages/shared-validators` | Zod schemas shared between frontend and backend |
 | `packages/shared-ui-tokens` | Canonical Tailwind config — single source of truth for colours, spacing, and typography |
 | `packages/shared-ui-components` | Cross-platform UI component library (`web/` for Oat UI + React, `mobile/` for NativeWind + React Native) |
+| `packages/shared-i18n` | Translation strings for English, Hindi, and Marathi (i18next compatible) |
 
 ---
 
@@ -179,27 +183,75 @@ npx lerna run test --scope=@society/admin-service
 ## Project Structure
 
 ```
-alankapuri-my-society/
+alankapuri-my-society/                  ← git root
+│
+├── lerna.json                          ← Lerna config (version: independent)
+├── package.json                        ← Root npm workspaces config
+├── nx.json                             ← ★ Nx task-runner caching (build · test · lint · type-check)
+├── tsconfig.base.json                  ← ★ Shared strict TS compiler options (all packages extend this)
+├── sonar-project.properties            ← SonarCloud SAST configuration
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml                      ← ★ CI pipeline (lint → type-check → test → SonarCloud → Snyk)
+│
 ├── applications/
-│   ├── owner-app/          ← mobile/ (RN + Expo) + web/ (Next.js + React)
-│   ├── admin-app/          ← mobile/ (RN + Expo) + web/ (Next.js + React)
-│   └── super-admin-app/    ← mobile/ (RN + Expo) + web/ (Next.js + React)
+│   ├── owner-app/
+│   │   ├── mobile/                     ← React Native 0.74 (Expo) + NativeWind v4
+│   │   │   └── tsconfig.json           ← extends base · module:esnext · moduleResolution:bundler · jsx:react-native
+│   │   └── web/                        ← Next.js 15 + React 19 + Tailwind CSS + Oat UI
+│   │       └── tsconfig.json           ← extends base · moduleResolution:bundler · jsx:preserve · noEmit · Next.js plugin
+│   ├── admin-app/
+│   │   ├── mobile/
+│   │   │   └── tsconfig.json           ← extends base · jsx:react-native
+│   │   └── web/
+│   │       └── tsconfig.json           ← extends base · jsx:preserve · Next.js plugin
+│   └── super-admin-app/
+│       ├── mobile/
+│       │   └── tsconfig.json           ← extends base · jsx:react-native
+│       └── web/
+│           └── tsconfig.json           ← extends base · jsx:preserve · Next.js plugin
+│
 ├── backend/
-│   ├── api-gateway/        ← Auth, routing, webhook guards
-│   ├── owner-service/      ← Owner-facing APIs
-│   ├── admin-service/      ← Admin-facing APIs + AdminJS panel
-│   ├── super-admin-service/← Platform management + global AdminJS panel
-│   └── media-service/      ← Image upload, transform (Sharp), CDN caching
+│   ├── api-gateway/                    ← NestJS · Auth, routing, webhook guards
+│   │   ├── tsconfig.json               ← extends base · module:commonjs · moduleResolution:node
+│   │   └── tsconfig.build.json         ← extends tsconfig.json · excludes *.spec.ts (nest build)
+│   ├── owner-service/                  ← NestJS · Owner-facing APIs
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.build.json
+│   ├── admin-service/                  ← NestJS · Admin-facing APIs + AdminJS panel
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.build.json
+│   ├── super-admin-service/            ← NestJS · Platform management + global AdminJS panel
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.build.json
+│   └── media-service/                  ← NestJS · Sharp image transforms, CloudFront CDN caching
+│       ├── tsconfig.json
+│       └── tsconfig.build.json
+│
 ├── packages/
-│   ├── shared-types/
-│   ├── shared-validators/
-│   ├── shared-ui-tokens/
-│   └── shared-ui-components/
-├── docs/
-│   └── PRD.md              ← Full Product Requirement Document (v1.9.0)
-├── lerna.json
-├── package.json
-└── tsconfig.base.json
+│   ├── shared-ui-assets/               ← Centralised static assets (favicons, icons, manifests)
+│   │   ├── assets/                     ← All static files (moved from root /public/)
+│   │   │   ├── favicon.ico / favicon-*.png
+│   │   │   ├── apple-icon*.png  · android-icon*.png  · ms-icon*.png
+│   │   │   ├── manifest.json  · browserconfig.xml
+│   │   ├── index.js                    ← Exports assetsPath for consuming apps
+│   │   ├── tsconfig.json               ← JS-only · allowJs · noEmit · checkJs:false
+│   │   └── package.json               ← @society/shared-ui-assets
+│   ├── shared-types/                   ← TypeScript interfaces & enums (FE + BE)
+│   │   └── tsconfig.json               ← extends base · module:commonjs · outDir:dist
+│   ├── shared-validators/              ← Zod schemas shared between frontend and backend
+│   │   └── tsconfig.json               ← extends base · module:commonjs · outDir:dist
+│   ├── shared-ui-tokens/               ← Canonical Tailwind config (colours, spacing, typography)
+│   │   └── tsconfig.json               ← extends base · module:commonjs · includes tailwind.config.ts only
+│   ├── shared-ui-components/           ← Cross-platform UI component library (web/ + mobile/ + shared/)
+│   │   └── tsconfig.json               ← extends base · module:esnext · moduleResolution:bundler · jsx:react-jsx
+│   └── shared-i18n/                    ← Translation strings (en, hi, mr) — i18next compatible
+│       └── tsconfig.json               ← extends base · module:commonjs · outDir:dist
+│
+└── docs/
+    ├── PRD.md                          ← Full Product Requirement Document
+    └── EPIC.md                         ← Epic estimates & story-point breakdown
 ```
 
 See [`docs/PRD.md`](./docs/PRD.md) for the complete specification including data schemas, API contracts, security architecture, and deployment guidelines.

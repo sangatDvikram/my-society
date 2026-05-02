@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  //
+  // ─── api-gateway build config ────────────────────────────────────────────
+  // Used by `tsc -p tsconfig.build.json` and the NestJS CLI (`nest build`).
+  // Identical to tsconfig.json but explicitly excludes test files so they
+  // are never compiled into the production dist/ bundle.
+  // ─────────────────────────────────────────────────────────────────────────
+  "exclude": ["node_modules", "test", "dist", "**/*spec.ts", "**/*e2e-spec.ts"]
+}

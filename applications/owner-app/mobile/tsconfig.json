@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../tsconfig.base.json",
+  //
+  // ─── owner-app / mobile (React Native 0.74 + Expo + NativeWind v4) ────────
+  // Owner-facing mobile app: visitor pre-approval, push notifications,
+  // Razorpay payment, maintenance, rental management, facility bookings,
+  // event feed with photo/video gallery.
+  //
+  // Key Expo SDK 51+ / React Native requirements:
+  //   moduleResolution: "bundler" — aligns with Metro / Expo SDK 51+
+  //   jsx: "react-native"         — Metro handles the JSX transform natively
+  //   noEmit: true                — Metro emits the bundle; tsc only type-checks
+  //   allowJs: true               — Expo config files (.js) must be included
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-native",
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo",
+    "paths": {
+      "@/*": ["./*"],
+      "@society/shared-types": ["../../../packages/shared-types/src"],
+      "@society/shared-validators": ["../../../packages/shared-validators/src"],
+      "@society/shared-ui-tokens": ["../../../packages/shared-ui-tokens"],
+      "@society/shared-ui-components": ["../../../packages/shared-ui-components/src"],
+      "@society/shared-i18n": ["../../../packages/shared-i18n/src"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}

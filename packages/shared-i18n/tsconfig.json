@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  //
+  // ─── @society/shared-i18n ───────────────────────────────────────────────
+  // Translation strings for English (en), Hindi (hi), and Marathi (mr)
+  // in i18next-compatible JSON format. All UI strings are externalised here
+  // per EPIC-20 internationalisation requirement.
+  //
+  // resolveJsonModule: true (inherited from base) allows direct import of
+  // .json translation files as typed objects.
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

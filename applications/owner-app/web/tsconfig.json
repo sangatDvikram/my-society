@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../tsconfig.base.json",
+  //
+  // ─── owner-app / web (Next.js 15 + React 19 + Oat UI + Tailwind) ─────────
+  // Owner-facing web dashboard: visitor pre-approval, maintenance requests,
+  // Razorpay payment flow, rental management, facility bookings, event feed.
+  //
+  // Key Next.js 15 requirements:
+  //   moduleResolution: "bundler" — enables subpath imports, bare specifiers
+  //   jsx: "preserve"             — Next.js SWC/Webpack handles JSX transform
+  //   noEmit: true                — Next.js emits; tsc only type-checks
+  //   plugins: [{ name: "next" }] — enables typed routes, server component hints
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "allowJs": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".next/cache/.tsbuildinfo",
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@society/shared-ui-assets": ["../../../packages/shared-ui-assets/index.js"],
+      "@society/shared-types": ["../../../packages/shared-types/src"],
+      "@society/shared-validators": ["../../../packages/shared-validators/src"],
+      "@society/shared-ui-tokens": ["../../../packages/shared-ui-tokens"],
+      "@society/shared-ui-components": ["../../../packages/shared-ui-components/src"],
+      "@society/shared-i18n": ["../../../packages/shared-i18n/src"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  //
+  // ─── @society/shared-ui-assets ──────────────────────────────────────────
+  // Centralised static assets (favicons, icons, manifests, browser config).
+  // This package is JavaScript-only (index.js exports assetsPath).
+  // The tsconfig is present only for IDE type-checking of index.js and to
+  // satisfy the monorepo's type-check script (`lerna run type-check`).
+  //
+  // allowJs + checkJs:false — typecheck the JS surface for import errors
+  //                           only; skip full semantic analysis of .js files
+  // noEmit: true            — no compilation output needed; assets are static
+  // declaration: false      — no .d.ts needed for a JS utility module
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": ["index.js"],
+  "exclude": ["node_modules"]
+}

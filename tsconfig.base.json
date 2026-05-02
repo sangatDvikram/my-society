@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  //
+  // ─── ROOT TSCONFIG BASE ────────────────────────────────────────────────────
+  //
+  // This file is the single source of truth for TypeScript compiler options
+  // shared across every package, service, and application in the monorepo.
+  //
+  // Every package-level tsconfig.json MUST extend this file:
+  //   "extends": "../../tsconfig.base.json"    (packages/* and backend/*)
+  //   "extends": "../../../tsconfig.base.json"  (applications/*/*)
+  //
+  // Packages SHOULD override only the settings they legitimately need to
+  // differ from the base (e.g. module, moduleResolution, lib, jsx).
+  // ───────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    // ── Language & Environment ───────────────────────────────────────────────
+    // Target ES2022 — Node.js 22 LTS supports all ES2022 features natively.
+    // Front-end apps (Next.js/Expo) override this to match their bundler target.
+    "target": "ES2022",
+
+    // ── Type Safety (strict mode + extra guards) ─────────────────────────────
+    "strict": true,                        // Enables all strict-* flags below
+    "strictNullChecks": true,              // null / undefined must be explicit
+    "noImplicitAny": true,                 // No inferred `any` types
+    "noImplicitReturns": true,             // Every code path must return
+    "noFallthroughCasesInSwitch": true,    // switch cases must break/return
+    "noUnusedLocals": true,                // Error on unused local variables
+    "noUnusedParameters": true,            // Error on unused function params
+    "exactOptionalPropertyTypes": false,   // Kept loose for DTO compatibility
+
+    // ── Module Interop ────────────────────────────────────────────────────────
+    // Each package overrides "module" and "moduleResolution" as required:
+    //   NestJS (CommonJS)  → module: "commonjs", moduleResolution: "node"
+    //   Next.js / Expo     → module: "esnext",   moduleResolution: "bundler"
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // ── Emit ─────────────────────────────────────────────────────────────────
+    "declaration": true,                   // Emit .d.ts files (override per-pkg)
+    "declarationMap": true,                // Emit .d.ts.map for go-to-source
+    "sourceMap": true,                     // Emit .js.map for debugging
+    "skipLibCheck": true,                  // Skip type-checking in node_modules
+
+    // ── Decorator support (required by NestJS + TypeORM) ─────────────────────
+    // Front-end apps inherit these without harm — they simply won't use them.
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}

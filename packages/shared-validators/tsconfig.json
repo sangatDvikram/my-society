@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  //
+  // ─── @society/shared-validators ─────────────────────────────────────────
+  // Zod schemas shared between frontend (form validation) and backend (DTO
+  // guards). Schemas cover: phone numbers (E.164), IFSC codes, document
+  // upload, facility booking, event creation, and tenant profiles.
+  //
+  // CommonJS output keeps it compatible with both NestJS (require) and
+  // Next.js/Expo (resolved via workspace symlink + bundler tree-shaking).
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

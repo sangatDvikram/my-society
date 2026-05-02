@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  //
+  // ─── @society/shared-types ───────────────────────────────────────────────
+  // All TypeScript interfaces, enums, and DTOs shared across every frontend
+  // app and backend service. Pure type declarations — no runtime code.
+  //
+  // Compiled to CommonJS so that NestJS services can require() the types
+  // without a bundler. Next.js / Expo apps import via workspace symlink and
+  // TypeScript resolves through paths in their own tsconfig.json.
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

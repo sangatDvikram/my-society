@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  //
+  // ─── media-service (NestJS — CommonJS) ───────────────────────────────────
+  // Common Image Media Service: unique image ID generation, pre-signed S3
+  // PUT URL flow, on-demand Sharp transforms (resize/WebP/quality), and
+  // CloudFront variant caching. FFmpeg thumbnail jobs via BullMQ.
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "removeComments": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts", "**/*e2e-spec.ts"]
+}

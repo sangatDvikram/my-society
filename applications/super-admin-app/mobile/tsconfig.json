@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../tsconfig.base.json",
+  //
+  // ─── super-admin-app / mobile (React Native 0.74 + Expo + NativeWind v4) ──
+  // Platform-operator mobile app: society status overview, feature-flag
+  // toggles, subscription tier management, key-rotation monitoring.
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-native",
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo",
+    "paths": {
+      "@/*": ["./*"],
+      "@society/shared-types": ["../../../packages/shared-types/src"],
+      "@society/shared-validators": ["../../../packages/shared-validators/src"],
+      "@society/shared-ui-tokens": ["../../../packages/shared-ui-tokens"],
+      "@society/shared-ui-components": ["../../../packages/shared-ui-components/src"],
+      "@society/shared-i18n": ["../../../packages/shared-i18n/src"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}

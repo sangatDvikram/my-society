@@ -1,0 +1,36 @@
+{
+  "name": "@society/root",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Society Management and Logging System — Lerna monorepo root",
+  "workspaces": [
+    "applications/owner-app/mobile",
+    "applications/owner-app/web",
+    "applications/admin-app/mobile",
+    "applications/admin-app/web",
+    "applications/super-admin-app/mobile",
+    "applications/super-admin-app/web",
+    "backend/api-gateway",
+    "backend/owner-service",
+    "backend/admin-service",
+    "backend/super-admin-service",
+    "backend/media-service",
+    "packages/*"
+  ],
+  "scripts": {
+    "start:dev": "lerna run start:dev --stream",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "type-check": "lerna run type-check",
+    "clean": "lerna clean --yes"
+  },
+  "devDependencies": {
+    "lerna": "^8.x",
+    "nx": ">=17.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  }
+}

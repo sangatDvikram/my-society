@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  //
+  // ─── @society/shared-ui-tokens ──────────────────────────────────────────
+  // Canonical Tailwind CSS design-token configuration.
+  // Contains tailwind.config.ts (canonical theme preset) and
+  // oat-overrides.css (Oat UI CSS variable overrides).
+  //
+  // tailwind.config.ts is consumed directly by each app's tailwind.config.ts
+  // via `extends: require("@society/shared-ui-tokens/tailwind.config")`.
+  // Tailwind's build process loads the file as a Node.js module (CommonJS /
+  // require) so we output to CommonJS. noEmit is false so the compiled
+  // tailwind.config.js is available for apps that don't use ts-node.
+  // ─────────────────────────────────────────────────────────────────────────
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": ".",
+    // declaration/declarationMap not needed — consumers only use the preset
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["tailwind.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

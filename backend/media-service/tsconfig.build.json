@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  //
+  // ─── media-service build config ──────────────────────────────────────────
+  // Used by `nest build` / `tsc -p tsconfig.build.json`.
+  // Excludes test files from the production dist/ bundle.
+  // ─────────────────────────────────────────────────────────────────────────
+  "exclude": ["node_modules", "test", "dist", "**/*spec.ts", "**/*e2e-spec.ts"]
+}
