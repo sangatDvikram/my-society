@@ -1,7 +1,7 @@
 # Product Requirement Document (PRD)
 # Society Management and Logging System
 
-**Version:** 1.9.0
+**Version:** 1.0.0
 **Date:** 2026-05-02
 **Status:** Draft
 **Author:** Engineering Team

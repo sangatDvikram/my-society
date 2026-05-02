@@ -1,0 +1,155 @@
+# =============================================================================
+# Society Management and Logging System — .gitignore
+# Stack: Lerna monorepo · NestJS · Vite + React · React Native (Expo) · Docker
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Node.js
+# -----------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.yarn/cache
+.yarn/unplugged
+.pnp.*
+package-lock.json.bak
+
+# -----------------------------------------------------------------------------
+# Lerna / Monorepo
+# -----------------------------------------------------------------------------
+.lerna/
+lerna-debug.log*
+
+# -----------------------------------------------------------------------------
+# Build artifacts (all packages / services)
+# -----------------------------------------------------------------------------
+dist/
+build/
+out/
+.turbo/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# -----------------------------------------------------------------------------
+# Environment variables — NEVER commit secrets
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.cert
+
+# -----------------------------------------------------------------------------
+# NestJS / Backend
+# -----------------------------------------------------------------------------
+backend/**/dist/
+*.log
+logs/
+docker-compose.override.yml
+
+# Puppeteer — temporary PDF generation files
+/tmp/
+backend/**/tmp/
+backend/**/generated-pdfs/
+*.pdf.tmp
+
+# TypeORM migrations auto-generated drafts
+backend/**/src/migrations/draft/
+
+# -----------------------------------------------------------------------------
+# Vite + React (Web Dashboards)
+# -----------------------------------------------------------------------------
+applications/**/web/dist/
+applications/**/web/.vite/
+applications/**/web/node_modules/
+
+# Vite environment files (beyond root .env rules)
+applications/**/.env.local
+applications/**/.env.development.local
+applications/**/.env.test.local
+applications/**/.env.production.local
+
+# -----------------------------------------------------------------------------
+# React Native / Expo (Mobile Apps)
+# -----------------------------------------------------------------------------
+.expo/
+.expo-shared/
+expo-env.d.ts
+
+# Native build outputs
+ios/Pods/
+ios/build/
+ios/*.xcworkspace/xcuserdata/
+android/app/build/
+android/.gradle/
+android/local.properties
+android/captures/
+*.apk
+*.aab
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Metro bundler cache
+.metro-health-check*
+.react-native-cache/
+
+# Detox (E2E testing)
+.detox/
+artifacts/
+
+# -----------------------------------------------------------------------------
+# AWS / Cloud
+# -----------------------------------------------------------------------------
+.aws/
+*.tfstate
+*.tfstate.backup
+.terraform/
+terraform.tfvars
+!terraform.tfvars.example
+
+# -----------------------------------------------------------------------------
+# Docker
+# -----------------------------------------------------------------------------
+docker-compose.override.yml
+
+# -----------------------------------------------------------------------------
+# Testing
+# -----------------------------------------------------------------------------
+coverage/
+.nyc_output/
+test-results/
+junit.xml
+*.lcov
+
+# -----------------------------------------------------------------------------
+# Editor / OS
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+
+# -----------------------------------------------------------------------------
+# Miscellaneous
+# -----------------------------------------------------------------------------
+*.local
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
