@@ -7,8 +7,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "type-check": "tsc --noEmit",
+    "lint": "npx eslint \"src/**/*.{ts,tsx}\"",
+    "type-check": "npx tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage"
@@ -27,11 +27,22 @@
     "react-dom": "^19.0.0"
   },
   "jest": {
-    "moduleFileExtensions": ["js", "jsx", "json", "ts", "tsx"],
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "json",
+      "ts",
+      "tsx"
+    ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.(ts|tsx)$",
     "transform": {
-      "^.+\\.(t|j)sx?$": ["ts-jest", { "tsconfig": "tsconfig.test.json" }]
+      "^.+\\.(t|j)sx?$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.test.json"
+        }
+      ]
     },
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1",
@@ -45,7 +56,9 @@
     "transformIgnorePatterns": [
       "/node_modules/(?!(@society)/)"
     ],
-    "setupFilesAfterEnv": ["<rootDir>/../jest.setup.ts"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/../jest.setup.ts"
+    ],
     "testEnvironment": "jsdom",
     "coverageDirectory": "../coverage",
     "collectCoverageFrom": [
@@ -54,7 +67,11 @@
       "!**/*.d.ts",
       "!**/index.ts"
     ],
-    "coverageReporters": ["text", "lcov", "html"]
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ]
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",

@@ -1,8 +1,9 @@
 import { NotFoundException } from '@nestjs/common'
-import { Test, TestingModule } from '@nestjs/testing'
+import { Test, type TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
-import { CreateVisitorLogDto } from './dto/create-visitor-log.dto'
+import { type Repository } from 'typeorm'
+
+import { type CreateVisitorLogDto } from './dto/create-visitor-log.dto'
 import { VisitorLog, VisitorStatus } from './entities/visitor-log.entity'
 import { VisitorService } from './visitor.service'
 

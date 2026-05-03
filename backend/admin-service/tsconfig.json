@@ -9,14 +9,19 @@
   "compilerOptions": {
     "module": "commonjs",
     "moduleResolution": "node",
-    "lib": ["ES2022"],
+    "strictPropertyInitialization": false,
+    "jsx": "react",
+    "lib": ["ES2022", "DOM"],
     "outDir": "./dist",
     "rootDir": "./src",
     "removeComments": true,
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "types": ["jest"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*":             ["./src/*"],
+      "@adminjs/nestjs": ["../../node_modules/@adminjs/nestjs/types"],
+      "@adminjs/typeorm": ["../../node_modules/@adminjs/typeorm/lib"]
     }
   },
   "include": ["src/**/*"],

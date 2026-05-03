@@ -6,6 +6,7 @@
  * copy, and CTA.
  */
 import { render, screen } from '@testing-library/react'
+
 import HomePage from './page'
 
 describe('Super Admin App — HomePage', () => {

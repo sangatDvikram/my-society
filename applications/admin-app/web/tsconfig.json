@@ -9,7 +9,11 @@
   // ─────────────────────────────────────────────────────────────────────────
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "module": "esnext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -18,16 +22,35 @@
     "allowJs": true,
     "incremental": true,
     "tsBuildInfoFile": ".next/cache/.tsbuildinfo",
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@society/shared-ui-assets": ["../../../packages/shared-ui-assets/index.js"],
-      "@society/shared-types": ["../../../packages/shared-types/src"],
-      "@society/shared-validators": ["../../../packages/shared-validators/src"],
-      "@society/shared-ui-tokens": ["../../../packages/shared-ui-tokens"],
-      "@society/shared-ui-components": ["../../../packages/shared-ui-components/src"],
-      "@society/shared-i18n": ["../../../packages/shared-i18n/src"]
-    }
+      "@/*": [
+        "./src/*"
+      ],
+      "@society/shared-ui-assets": [
+        "../../../packages/shared-ui-assets/index.js"
+      ],
+      "@society/shared-types": [
+        "../../../packages/shared-types/src"
+      ],
+      "@society/shared-validators": [
+        "../../../packages/shared-validators/src"
+      ],
+      "@society/shared-ui-tokens": [
+        "../../../packages/shared-ui-tokens"
+      ],
+      "@society/shared-ui-components": [
+        "../../../packages/shared-ui-components/src"
+      ],
+      "@society/shared-i18n": [
+        "../../../packages/shared-i18n/src"
+      ]
+    },
+    "isolatedModules": true
   },
   "include": [
     "next-env.d.ts",
@@ -35,5 +58,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

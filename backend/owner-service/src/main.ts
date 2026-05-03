@@ -1,7 +1,8 @@
 import 'reflect-metadata'
+import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-import { ValidationPipe } from '@nestjs/common'
-import { MicroserviceOptions, Transport } from '@nestjs/microservices'
+import { type MicroserviceOptions, Transport } from '@nestjs/microservices'
+
 import { AppModule } from './app.module'
 
 /**
@@ -57,8 +58,9 @@ async function bootstrap(): Promise<void> {
 
   await app.listen(httpPort)
 
-  console.log(`[owner-service] HTTP → http://localhost:${httpPort}/api/v1`)
-  console.log(`[owner-service] TCP  → tcp://0.0.0.0:${tcpPort}`)
+  const logger = new Logger('Bootstrap')
+  logger.log(`[owner-service] HTTP → http://localhost:${httpPort}/api/v1`)
+  logger.log(`[owner-service] TCP  → tcp://0.0.0.0:${tcpPort}`)
 }
 
 void bootstrap()

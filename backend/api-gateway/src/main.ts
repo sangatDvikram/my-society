@@ -1,6 +1,8 @@
 import 'reflect-metadata'
+
+import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-import { ValidationPipe } from '@nestjs/common'
+
 import { AppModule } from './app.module'
 
 async function bootstrap(): Promise<void> {
@@ -30,7 +32,7 @@ async function bootstrap(): Promise<void> {
   const port = process.env['PORT'] ?? 3000
   await app.listen(port)
 
-  console.log(`[api-gateway] Listening on http://localhost:${port}/api/v1`)
+  new Logger('Bootstrap').log(`[api-gateway] Listening on http://localhost:${port}/api/v1`)
 }
 
 void bootstrap()

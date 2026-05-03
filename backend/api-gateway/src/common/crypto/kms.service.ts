@@ -96,7 +96,7 @@ export class KmsService implements OnModuleInit {
    *
    * TODO: install `@aws-sdk/client-kms` and uncomment the implementation.
    */
-  private async loadFromKms(): Promise<void> {
+  private loadFromKms(): Promise<void> {
     // const { KMSClient, DecryptCommand } = await import('@aws-sdk/client-kms')
     // const kmsKeyArn = this.configService.getOrThrow<string>('KMS_KEY_ARN')
     // const client = new KMSClient({})
@@ -116,6 +116,6 @@ export class KmsService implements OnModuleInit {
     // this.hmacSecret = Buffer.from(hmacResult.Plaintext!)
     // this.logger.log('Crypto keys decrypted via AWS KMS')
 
-    throw new Error('AWS KMS path not yet implemented — set NODE_ENV=development for local use')
+    return Promise.reject(new Error('AWS KMS path not yet implemented — set NODE_ENV=development for local use'))
   }
 }

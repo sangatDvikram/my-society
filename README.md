@@ -4,7 +4,7 @@
 
 > A multi-tenant SaaS platform that digitises the end-to-end operations of residential housing societies — visitor logging, maintenance, payments, rentals, facilities, events, and annual financial audits.
 
-**PRD Version:** 1.0.0 · **Status:** Draft · **Stack:** Lerna monorepo · NestJS · React Native · Next.js + React · PostgreSQL · Docker
+**PRD Version:** 1.0.0 · **Status:** Draft · **Stack:** Nx + Lerna monorepo · NestJS · React Native · Next.js + React · PostgreSQL · Docker · TypeScript 6
 
 ---
 
@@ -77,21 +77,23 @@ All services are NestJS applications containerised with Docker. They communicate
 
 | Layer | Technology | Version |
 |---|---|---|
+| Language | TypeScript (strict mode, all packages) | 6.0.x |
 | Mobile | React Native (Expo) + NativeWind | RN 0.74 / NW 4.x |
 | Web | Next.js + React + Tailwind CSS | Next.js 15.x / React 19.x / TW 3.4 |
 | Backend | NestJS + TypeORM | NestJS 10.x / TypeORM 0.3.x |
-| Node.js Runtime | Node.js (minimum LTS for all services) | 22.x |
+| Node.js Runtime | Node.js LTS | 22.x |
 | Database | PostgreSQL | 16 |
 | Cache / Queues | Redis + BullMQ | Redis 7.x / BullMQ 5.x |
-| Admin Panel | AdminJS (`@adminjs/nestjs`, `@adminjs/typeorm`) | 7.x |
-| Monorepo | Lerna (+ optional Nx) | Lerna 8.x |
+| Admin Panel | AdminJS v7 (`@adminjs/nestjs`, `@adminjs/typeorm`, `@adminjs/express`) | 7.x |
+| Monorepo | Nx (task runner + build cache) + Lerna (versioning) | Nx 21.x / Lerna 8.x |
+| Linting | ESLint 9 flat config (`eslint.config.mjs`) + `typescript-eslint` + `import/order` | ESLint 9.x |
 | PDF Generation | Puppeteer (headless Chromium) | 22.x |
 | Image Processing | Sharp (libvips Node binding) | 0.33.x |
 | Object Storage | S3-compatible (AWS S3 by default; swappable with MinIO / LocalStack in dev) | — |
 | Payments | Razorpay (UPI, cards, Autopay, Route) | — |
 | Push Notifications | Firebase Cloud Messaging (FCM) | — |
 | Containers | Docker + Docker Compose | Docker 25.x |
-| CI/CD | GitHub Actions | — |
+| CI/CD | GitHub Actions (lint → type-check → test → SonarCloud → Snyk) | — |
 | Secret Management | Environment variables (`.env`; never committed) | — |
 
 ---
@@ -195,16 +197,25 @@ yarn lerna run test --scope=@society/admin-service
 yarn nx affected --target=test
 ```
 
-### Code Quality — Lint & Format
+### Code Quality — Lint & Type-Check
 
-The repo ships a root **ESLint 9 flat config** (`eslint.config.mjs`) and a unified **Prettier** config (`.prettierrc.json`) that cover every package type automatically via file-glob scoping.
+The repo ships a root **ESLint 9 flat config** (`eslint.config.mjs`) with `typescript-eslint` typed rules, `import/order` enforcement, and `no-console` (NestJS Logger required in all backend services). Prettier (`.prettierrc.json`) covers formatting for every package type.
+
+Each service and application invokes ESLint via `npx eslint` in its `package.json` `lint` script — this ensures Nx can resolve the binary regardless of hoisting. Web apps use `npx eslint "src/**/*.{ts,tsx}"` (Next.js 16 removed `next lint`).
 
 ```bash
-# Lint all packages via Lerna
-yarn lint
+# Lint all 14 projects via Nx (results are cached)
+npx nx run-many --target=lint --all
 
-# Auto-fix lint issues across the entire repo
-yarn lint:fix
+# Type-check all 14 projects via Nx
+npx nx run-many --target=type-check --all
+
+# Run only what changed since develop (CI-style)
+npx nx affected --target=lint
+npx nx affected --target=type-check
+
+# Auto-fix lint issues in a single service
+cd backend/owner-service && npx eslint "{src,apps,libs,test}/**/*.ts" --fix
 
 # Check formatting (CI-safe, exits non-zero if files differ)
 yarn format:check
@@ -213,8 +224,8 @@ yarn format:check
 yarn format
 ```
 
-> **Nx cache:** Lint results are cached by Nx — unchanged packages are skipped instantly.
-> Use `yarn nx affected --target=lint` to lint only what changed since `develop`.
+> **Nx cache:** Both `lint` and `type-check` results are cached — unchanged projects are skipped instantly.
+> Use `--skip-nx-cache` to force a clean run (equivalent to what the CI pipeline does).
 
 ---
 
@@ -257,10 +268,11 @@ alankapuri-my-society/                  ← git root
 │   │       │   │   └── globals.css     ← @import '@knadh/oat/oat.min.css' · @tailwind · CSS var overrides
 │   │       │   └── types/
 │   │       │       └── global.d.ts     ← declare module '*.css' (CSS side-effect import support)
+│   │       ├── src/app/page.spec.tsx   ← Jest + @testing-library/react homepage tests
 │   │       ├── next.config.ts          ← createNextConfig(__dirname) from @society/shared-nextjs-config
 │   │       ├── tailwind.config.ts      ← presets: [shared-ui-tokens]
 │   │       ├── postcss.config.js       ← postcss-import (first) · tailwindcss · autoprefixer
-│   │       ├── package.json            ← @society/owner-app-web
+│   │       ├── package.json            ← @society/owner-app-web (lint: npx eslint, type-check: npx tsc)
 │   │       └── tsconfig.json           ← extends base · moduleResolution:bundler · jsx:preserve
 │   ├── admin-app/
 │   │   ├── mobile/
@@ -269,10 +281,11 @@ alankapuri-my-society/                  ← git root
 │   │       ├── src/
 │   │       │   ├── app/
 │   │       │   │   ├── layout.tsx · page.tsx · globals.css
+│   │       │   │   └── page.spec.tsx   ← Jest + @testing-library/react homepage tests
 │   │       │   └── types/global.d.ts
 │   │       ├── next.config.ts · tailwind.config.ts
 │   │       ├── postcss.config.js       ← postcss-import (first) · tailwindcss · autoprefixer
-│   │       ├── package.json            ← @society/admin-app-web
+│   │       ├── package.json            ← @society/admin-app-web (lint: npx eslint, type-check: npx tsc)
 │   │       └── tsconfig.json
 │   └── super-admin-app/
 │       ├── mobile/
@@ -281,10 +294,11 @@ alankapuri-my-society/                  ← git root
 │           ├── src/
 │           │   ├── app/
 │           │   │   ├── layout.tsx · page.tsx · globals.css
+│           │   │   └── page.spec.tsx   ← Jest + @testing-library/react homepage tests
 │           │   └── types/global.d.ts
 │           ├── next.config.ts · tailwind.config.ts
 │           ├── postcss.config.js       ← postcss-import (first) · tailwindcss · autoprefixer
-│           ├── package.json            ← @society/super-admin-app-web
+│           ├── package.json            ← @society/super-admin-app-web (lint: npx eslint, type-check: npx tsc)
 │           └── tsconfig.json
 │
 ├── backend/
@@ -298,36 +312,60 @@ alankapuri-my-society/                  ← git root
 │   │   │   └── database/
 │   │   │       └── database.module.ts  ← TypeORM forRoot (env-driven PostgreSQL config)
 │   │   ├── .env.example                ← Required env vars template
-│   │   ├── package.json                ← @society/api-gateway
+│   │   ├── package.json                ← @society/api-gateway (lint: npx eslint)
 │   │   ├── tsconfig.json               ← extends base · module:commonjs
 │   │   └── tsconfig.build.json         ← extends tsconfig.json · excludes *.spec.ts
 │   ├── owner-service/                  ← ★ NestJS · Owner-facing APIs + TypeORM
 │   │   ├── src/
-│   │   │   ├── main.ts                 ← Bootstrap (port 3001)
+│   │   │   ├── main.ts                 ← Bootstrap (port 3001, NestJS Logger)
 │   │   │   ├── app.module.ts · app.controller.ts · app.service.ts · app.controller.spec.ts
 │   │   │   └── database/database.module.ts
 │   │   ├── .env.example
-│   │   ├── package.json                ← @society/owner-service
+│   │   ├── package.json                ← @society/owner-service (lint: npx eslint)
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.build.json
-│   ├── admin-service/                  ← ★ NestJS · Admin-facing APIs + AdminJS panel (port 3002)
+│   ├── admin-service/                  ← ★ NestJS · Admin-facing APIs + AdminJS panel at /panel (port 3002)
 │   │   ├── src/
-│   │   │   ├── main.ts                 ← Bootstrap (port 3002)
+│   │   │   ├── main.ts                 ← Bootstrap (port 3002, NestJS Logger)
 │   │   │   ├── app.module.ts · app.controller.ts · app.service.ts · app.controller.spec.ts
-│   │   │   └── database/database.module.ts
+│   │   │   ├── database/database.module.ts
+│   │   │   └── adminjs/               ← ★ AdminJS v7 panel (session auth, Redis, TypeORM)
+│   │   │       ├── adminjs.module.ts  ← AdminJS NestJS module registration
+│   │   │       ├── adminjs.options.ts ← ComponentLoader, resources array, branding, auth hook
+│   │   │       ├── audit-log.entity.ts← TypeORM entity for AdminJS action audit trail
+│   │   │       ├── components/        ← Custom React display components (bundled via ComponentLoader)
+│   │   │       │   ├── BookingStatusBadge.tsx
+│   │   │       │   ├── EventStatusBadge.tsx
+│   │   │       │   ├── PanDisplay.tsx
+│   │   │       │   └── PhoneDisplay.tsx
+│   │   │       └── resources/         ← AdminJS ResourceWithOptions per entity (14 resources)
+│   │   │           ├── society.resource.ts · flat.resource.ts · user.resource.ts
+│   │   │           ├── bank-account.resource.ts · payment.resource.ts · flat-rental.resource.ts
+│   │   │           ├── facility-booking.resource.ts · common-facility.resource.ts
+│   │   │           ├── society-event.resource.ts · event-media.resource.ts
+│   │   │           ├── media-asset.resource.ts · vendor-profile.resource.ts
+│   │   │           ├── tenant-profile.resource.ts · visitor-log.resource.ts
+│   │   │           └── audit-report.resource.ts
 │   │   ├── Dockerfile                  ← ★ Multi-stage: deps → build → runner (node:22-alpine)
 │   │   ├── .env.example               ← DB · JWT · AdminJS session · Redis env vars
-│   │   ├── package.json               ← @society/admin-service
+│   │   ├── package.json               ← @society/admin-service (lint: npx eslint)
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.build.json
-│   ├── super-admin-service/            ← ★ NestJS · Platform management + global AdminJS panel (port 3003)
+│   ├── super-admin-service/            ← ★ NestJS · Platform management + global AdminJS panel at /superadmin (port 3003)
 │   │   ├── src/
-│   │   │   ├── main.ts                 ← Bootstrap (port 3003)
+│   │   │   ├── main.ts                 ← Bootstrap (port 3003, NestJS Logger)
 │   │   │   ├── app.module.ts · app.controller.ts · app.service.ts · app.controller.spec.ts
-│   │   │   └── database/database.module.ts
+│   │   │   ├── database/database.module.ts
+│   │   │   └── adminjs/               ← ★ AdminJS v7 global panel (all societies, feature flags)
+│   │   │       ├── adminjs.module.ts · adminjs.options.ts · audit-log.entity.ts
+│   │   │       ├── components/        ← BookingStatusBadge · EventStatusBadge · PanDisplay · PhoneDisplay · SystemHealthDashboard
+│   │   │       ├── dashboard/
+│   │   │       │   └── dashboard.component.tsx ← Custom AdminJS dashboard (system health)
+│   │   │       └── resources/         ← 15 resources (includes feature-flag.resource.ts vs admin-service)
+│   │   │           └── ...same resources as admin-service + feature-flag.resource.ts
 │   │   ├── Dockerfile                  ← ★ Multi-stage: deps → build → runner (node:22-alpine)
 │   │   ├── .env.example               ← DB · JWT · TOTP · DEK · HMAC_SECRET env vars
-│   │   ├── package.json               ← @society/super-admin-service
+│   │   ├── package.json               ← @society/super-admin-service (lint: npx eslint)
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.build.json
 │   └── media-service/                  ← ★ NestJS · object storage pre-signed URLs, Sharp, FFmpeg (port 3004)
@@ -337,7 +375,7 @@ alankapuri-my-society/                  ← git root
 │       │   └── database/database.module.ts
 │       ├── Dockerfile                  ← ★ Multi-stage + apk add ffmpeg in runner stage
 │       ├── .env.example               ← DB · storage buckets · BullMQ env vars
-│       ├── package.json               ← @society/media-service
+│       ├── package.json               ← @society/media-service (lint: npx eslint)
 │       ├── tsconfig.json
 │       └── tsconfig.build.json
 │
@@ -345,33 +383,40 @@ alankapuri-my-society/                  ← git root
 │   ├── shared-nextjs-config/           ← ★ Shared Next.js base config for all web dashboards
 │   │   ├── next.config.base.js         ← transpilePackages + security headers + image config
 │   │   ├── next.config.base.d.ts       ← TypeScript type declaration
-│   │   ├── package.json                ← @society/shared-nextjs-config
-│   │   └── tsconfig.json
+│   │   ├── package.json                ← @society/shared-nextjs-config (type-check: npx tsc)
+│   │   └── tsconfig.json               ← module/moduleResolution: node16 (paired, non-deprecated)
 │   ├── shared-ui-assets/               ← Centralised static assets (favicons, icons, manifests)
 │   │   ├── assets/                     ← favicon · apple-icon · ms-icon · manifest.json
 │   │   ├── index.js · tsconfig.json
 │   │   └── package.json                ← @society/shared-ui-assets
 │   ├── shared-types/                   ← TypeScript interfaces & enums (FE + BE)
+│   │   ├── src/                        ← Type declarations (moduleResolution: bundler)
 │   │   ├── package.json                ← @society/shared-types
-│   │   └── tsconfig.json
+│   │   └── tsconfig.json               ← module:commonjs · moduleResolution:bundler
 │   ├── shared-validators/              ← Zod schemas shared between frontend and backend
+│   │   ├── src/                        ← Zod schema files (moduleResolution: bundler)
 │   │   ├── package.json                ← @society/shared-validators
-│   │   └── tsconfig.json
+│   │   └── tsconfig.json               ← module:commonjs · moduleResolution:bundler
 │   ├── shared-ui-tokens/               ← ★ Canonical Tailwind design-token preset
 │   │   ├── tailwind.config.ts          ← Colors, spacing, typography, radius, shadows
-│   │   ├── package.json                ← @society/shared-ui-tokens
-│   │   └── tsconfig.json
+│   │   ├── package.json                ← @society/shared-ui-tokens (type-check: npx tsc)
+│   │   └── tsconfig.json               ← module/moduleResolution: node16
 │   ├── shared-ui-components/           ← ★ Cross-platform UI component library
 │   │   ├── src/
 │   │   │   ├── web/
 │   │   │   │   ├── ClickCounter.tsx    ← Oat UI demo: article · button · mark · progress
+│   │   │   │   ├── ClickCounter.spec.tsx ← Jest + @testing-library/react tests
 │   │   │   │   └── index.ts            ← Web component barrel export
 │   │   │   └── index.ts                ← Root barrel (re-exports web/)
+│   │   ├── jest.setup.ts               ← import '@testing-library/jest-dom' (DOM matchers)
 │   │   ├── package.json                ← @society/shared-ui-components · exports: ./src (transpilePackages)
-│   │   └── tsconfig.json
+│   │   ├── tsconfig.json               ← moduleResolution:bundler · types:[jest,@testing-library/jest-dom]
+│   │   └── tsconfig.test.json          ← module:commonjs · moduleResolution:node · for ts-jest
 │   └── shared-i18n/                    ← Translation strings (en, hi, mr) — i18next compatible
-│       ├── package.json                ← @society/shared-i18n
-│       └── tsconfig.json
+│       ├── src/
+│       │   └── index.ts                ← SUPPORTED_LOCALES · SupportedLocale · DEFAULT_LOCALE exports
+│       ├── package.json                ← @society/shared-i18n (type-check: npx tsc)
+│       └── tsconfig.json               ← module/moduleResolution: node16
 │
 └── docs/
     ├── PRD.md                          ← Full Product Requirement Document

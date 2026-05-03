@@ -5,6 +5,7 @@
  * imports. We verify the brand identity, headings, description copy, and CTA.
  */
 import { render, screen } from '@testing-library/react'
+
 import HomePage from './page'
 
 describe('Admin App — HomePage', () => {

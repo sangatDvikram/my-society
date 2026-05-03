@@ -12,8 +12,8 @@
   // as-is and the .d.ts is hand-authored alongside it.
   // ─────────────────────────────────────────────────────────────────────────
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "lib": ["ES2022"],
     "allowJs": true,
     "checkJs": true,

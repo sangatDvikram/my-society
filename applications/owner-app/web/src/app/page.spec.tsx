@@ -6,6 +6,7 @@
  * internal logic here — that lives in shared-ui-components.
  */
 import { render, screen } from '@testing-library/react'
+
 import HomePage from './page'
 
 // 'use client' directives are string expressions; ts-jest compiles them fine.

@@ -41,7 +41,11 @@
       "!**/*.d.ts",
       "!**/index.ts"
     ],
-    "coverageReporters": ["text", "lcov", "html"],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
     "testEnvironment": "node"
   },
   "dependencies": {

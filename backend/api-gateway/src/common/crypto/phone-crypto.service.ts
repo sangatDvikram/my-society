@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common'
 import {
   createCipheriv,
   createDecipheriv,
@@ -6,6 +5,9 @@ import {
   randomBytes,
   timingSafeEqual,
 } from 'crypto'
+
+import { Injectable } from '@nestjs/common'
+
 import { KmsService } from './kms.service'
 
 /**
@@ -126,7 +128,7 @@ export class PhoneCryptoService {
     })
     decipher.setAuthTag(authTag)
 
-    return decipher.update(ciphertext) + decipher.final('utf8')
+    return decipher.update(ciphertext, undefined, 'utf8') + decipher.final('utf8')
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

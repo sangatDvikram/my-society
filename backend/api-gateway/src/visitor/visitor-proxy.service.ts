@@ -1,8 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import { ClientProxy } from '@nestjs/microservices'
-import { Observable } from 'rxjs'
+import { Observable , throwError, TimeoutError } from 'rxjs'
 import { timeout, catchError } from 'rxjs/operators'
-import { throwError, TimeoutError } from 'rxjs'
+
 import { CreateVisitorLogDto } from './dto/create-visitor-log.dto'
 
 /**

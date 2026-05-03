@@ -1,5 +1,8 @@
 import 'reflect-metadata'
+
+import { Logger } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
+
 import { AppModule } from './app.module'
 
 async function bootstrap(): Promise<void> {
@@ -14,7 +17,7 @@ async function bootstrap(): Promise<void> {
   const port = process.env['PORT'] ?? 3004
   await app.listen(port)
 
-  console.log(`[media-service] Listening on http://localhost:${port}/api/v1`)
+  new Logger('Bootstrap').log(`[media-service] Listening on http://localhost:${port}/api/v1`)
 }
 
 void bootstrap()

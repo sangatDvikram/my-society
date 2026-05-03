@@ -10,7 +10,7 @@
     "next.config.base.d.ts"
   ],
   "scripts": {
-    "type-check": "tsc --noEmit",
+    "type-check": "npx tsc --noEmit",
     "lint": "echo 'No separate lint target — covered by root eslint.config.mjs'"
   },
   "peerDependencies": {

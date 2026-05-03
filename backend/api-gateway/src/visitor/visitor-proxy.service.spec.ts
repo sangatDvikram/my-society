@@ -1,6 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing'
+import { Test, type TestingModule } from '@nestjs/testing'
 import { of, throwError } from 'rxjs'
-import { CreateVisitorLogDto } from './dto/create-visitor-log.dto'
+
+import { type CreateVisitorLogDto } from './dto/create-visitor-log.dto'
 import { VisitorProxyService } from './visitor-proxy.service'
 
 // ── Mock ClientProxy ──────────────────────────────────────────────────────────

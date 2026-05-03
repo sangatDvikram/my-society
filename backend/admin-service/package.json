@@ -8,19 +8,27 @@
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
+    "lint": "npx eslint \"{src,apps,libs,test}/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "type-check": "tsc -p tsconfig.build.json --noEmit"
   },
   "dependencies": {
+    "@adminjs/express": "^6.1.1",
+    "@adminjs/nestjs": "^7.0.0",
+    "@adminjs/typeorm": "^5.0.1",
     "@nestjs/common": "^10.0.0",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/typeorm": "^10.0.0",
     "@society/shared-types": "*",
     "@society/shared-validators": "*",
+    "adminjs": "^7.8.17",
+    "connect-redis": "^9.0.0",
+    "express-session": "^1.19.0",
+    "ioredis": "^5.10.1",
     "pg": "^8.11.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0",
@@ -31,6 +39,7 @@
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
     "@types/express": "^4.17.0",
+    "@types/express-session": "^1.19.0",
     "@types/jest": "^29.5.0",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.11.0",
@@ -60,7 +69,11 @@
       "!**/main.ts",
       "!**/index.ts"
     ],
-    "coverageReporters": ["text", "lcov", "html"],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
     "testEnvironment": "node"
   }
 }

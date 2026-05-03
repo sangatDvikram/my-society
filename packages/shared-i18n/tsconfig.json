@@ -11,8 +11,8 @@
   // .json translation files as typed objects.
   // ─────────────────────────────────────────────────────────────────────────
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src"

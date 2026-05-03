@@ -14,8 +14,8 @@
   // tailwind.config.js is available for apps that don't use ts-node.
   // ─────────────────────────────────────────────────────────────────────────
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": ".",

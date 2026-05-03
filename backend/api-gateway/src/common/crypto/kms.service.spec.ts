@@ -7,8 +7,9 @@
  * throws until @aws-sdk/client-kms is integrated.
  */
 
-import { Test, TestingModule } from '@nestjs/testing'
 import { ConfigService } from '@nestjs/config'
+import { Test, type TestingModule } from '@nestjs/testing'
+
 import { KmsService } from './kms.service'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

@@ -10,8 +10,8 @@
     "src/locales"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "type-check": "tsc --noEmit",
+    "build": "npx tsc -p tsconfig.json",
+    "type-check": "npx tsc --noEmit",
     "lint": "echo 'Covered by root eslint.config.mjs'"
   },
   "peerDependencies": {

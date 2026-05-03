@@ -5,8 +5,9 @@
  * VisitorService is fully mocked — no database I/O occurs.
  */
 
-import { Test, TestingModule } from '@nestjs/testing'
-import { CreateVisitorLogDto } from './dto/create-visitor-log.dto'
+import { Test, type TestingModule } from '@nestjs/testing'
+
+import { type CreateVisitorLogDto } from './dto/create-visitor-log.dto'
 import { VisitorLog, VisitorStatus } from './entities/visitor-log.entity'
 import { VisitorController } from './visitor.controller'
 import { VisitorService } from './visitor.service'

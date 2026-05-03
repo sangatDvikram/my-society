@@ -143,16 +143,17 @@ export default tseslint.config(
     },
   },
 
-  // ── 7. Test files — relax strict rules inside specs ─────────────────────
+  // ── 7. Test files — disable typed linting (spec files not in tsconfig) ──
   {
     files: TEST_FILES,
+    // disableTypeChecked turns off all rules that require type information.
+    // Spec files are excluded from the backend tsconfig.json files, so the
+    // project service cannot provide type info for them.
+    extends: [tseslint.configs.disableTypeChecked],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
       'no-console': 'off',
     },
   },

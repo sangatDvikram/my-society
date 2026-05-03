@@ -1,5 +1,5 @@
+import { type KmsService } from './kms.service'
 import { PhoneCryptoService } from './phone-crypto.service'
-import { KmsService } from './kms.service'
 
 /**
  * PhoneCryptoService — unit tests

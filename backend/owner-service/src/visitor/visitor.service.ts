@@ -1,8 +1,9 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { VisitorLog, VisitorStatus } from './entities/visitor-log.entity'
+
 import { CreateVisitorLogDto } from './dto/create-visitor-log.dto'
+import { VisitorLog, VisitorStatus } from './entities/visitor-log.entity'
 
 /**
  * VisitorService — domain logic for visitor log management.
