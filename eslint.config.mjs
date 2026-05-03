@@ -1,7 +1,7 @@
 // =============================================================================
 // Society Management and Logging System — Root ESLint Flat Config (ESLint 9)
 // Covers every package type in the monorepo via file-glob scoping:
-//   · NestJS microservices   (backend/**)
+//   · NestJS microservices   (services/**)
 //   · Next.js web apps       (applications/*/web/**)
 //   · React Native / Expo    (applications/*/mobile/**)
 //   · Shared TS/JS packages  (packages/**)
@@ -24,7 +24,7 @@ const REACT_FILES = [
   'packages/shared-ui-tokens/**/*.{ts,tsx}',
 ]
 const MOBILE_FILES = ['applications/*/mobile/**/*.{ts,tsx}']
-const BACKEND_FILES = ['backend/**/*.ts']
+const BACKEND_FILES = ['services/**/*.ts']
 const TEST_FILES = [
   '**/*.spec.ts',
   '**/*.spec.tsx',

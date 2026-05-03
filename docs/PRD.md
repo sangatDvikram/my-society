@@ -2779,7 +2779,7 @@ All jobs are configured with:
 ### 9.3 Phone Number Encryption — Implementation Detail
 
 ```typescript
-// backend/api-gateway/common/crypto/phone-crypto.service.ts
+// services/api-gateway/common/crypto/phone-crypto.service.ts
 import { createCipheriv, createDecipheriv, randomBytes, createHmac } from 'crypto';
 
 @Injectable()
@@ -3170,7 +3170,7 @@ alankapuri-my-society/                  ← git root
 │           ├── postcss.config.js
 │           └── package.json
 │
-├── backend/
+├── services/
 │   ├── owner-service/                  ← NestJS; handles owner-facing APIs
 │   │   ├── src/
 │   │   │   ├── flats/
@@ -3478,11 +3478,11 @@ alankapuri-my-society/                  ← git root
     "applications/admin-app/web",
     "applications/super-admin-app/mobile",
     "applications/super-admin-app/web",
-    "backend/api-gateway",
-    "backend/owner-service",
-    "backend/admin-service",
-    "backend/super-admin-service",
-    "backend/media-service",
+    "services/api-gateway",
+    "services/owner-service",
+    "services/admin-service",
+    "services/super-admin-service",
+    "services/media-service",
     "packages/*"                          // picks up shared-ui-assets, shared-ui-tokens, shared-ui-components, etc.
   ],
   "command": {
@@ -3594,7 +3594,7 @@ All TypeScript configuration is organised in a two-level hierarchy:
 
 | Package / Service type | `module` | `moduleResolution` | `jsx` | `noEmit` |
 |---|---|---|---|---|
-| **NestJS services** (`backend/*`) | `commonjs` | `node` | — | `false` |
+| **NestJS services** (`services/*`) | `commonjs` | `node` | — | `false` |
 | **Next.js web apps** (`applications/*/web`) | `esnext` | `bundler` | `preserve` | `true` |
 | **React Native / Expo** (`applications/*/mobile`) | `esnext` | `bundler` | `react-native` | `true` |
 | **Shared TS packages** (`packages/shared-types`, `shared-validators`, `shared-i18n`) | `commonjs` | `node` | — | `false` |
@@ -4580,7 +4580,7 @@ GET /payments/audit-reports/owner/statement?financialYear=2025-2026
 ### 15.6 NestJS Implementation Sketch
 
 ```typescript
-// backend/admin-service/src/audit/audit.service.ts
+// services/admin-service/src/audit/audit.service.ts
 @Injectable()
 export class AuditService {
   constructor(
@@ -4647,7 +4647,7 @@ export class AuditService {
 ```
 
 ```typescript
-// backend/admin-service/src/audit/processors/audit-generate.processor.ts
+// services/admin-service/src/audit/processors/audit-generate.processor.ts
 @Processor('audit-report:generate')
 export class AuditGenerateProcessor {
   constructor(
@@ -4822,7 +4822,7 @@ Each panel exposes a different scope of TypeORM entities, enforced via AdminJS's
 #### 16.4.1 Super Admin Panel (`super-admin-service`)
 
 ```typescript
-// backend/super-admin-service/src/adminjs/adminjs.module.ts
+// services/super-admin-service/src/adminjs/adminjs.module.ts
 import { AdminModule } from '@adminjs/nestjs';
 import { Database, Resource } from '@adminjs/typeorm';
 import AdminJS from 'adminjs';
@@ -4875,7 +4875,7 @@ export class AdminJSModule {}
 #### 16.4.2 Resource Definition with Tenant Scoping (`admin-service`)
 
 ```typescript
-// backend/admin-service/src/adminjs/resources/payment.resource.ts
+// services/admin-service/src/adminjs/resources/payment.resource.ts
 import { ResourceWithOptions } from 'adminjs';
 import { Payment } from '../../payments/payment.entity';
 
@@ -4914,7 +4914,7 @@ export const PaymentResource: ResourceWithOptions = {
 The `phone_encrypted` column must never be rendered as raw ciphertext in the admin panel. A custom React component decrypts the value on the **server side** via a before-hook, then renders the plaintext only in the authorised admin session.
 
 ```typescript
-// backend/admin-service/src/adminjs/resources/user.resource.ts
+// services/admin-service/src/adminjs/resources/user.resource.ts
 import { ResourceWithOptions } from 'adminjs';
 import AdminJS from 'adminjs';
 import { User } from '../../users/user.entity';
@@ -4954,7 +4954,7 @@ export const UserResource: ResourceWithOptions = {
 ```
 
 ```tsx
-// backend/admin-service/src/adminjs/components/PhoneDisplay.tsx
+// services/admin-service/src/adminjs/components/PhoneDisplay.tsx
 import React from 'react';
 import { ShowPropertyProps } from 'adminjs';
 

@@ -103,7 +103,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: backend/${{ matrix.service }}/Dockerfile
+          file: services/${{ matrix.service }}/Dockerfile
           push: true
           tags: |
             ${{ steps.ecr-login.outputs.registry }}/society/${{ matrix.service }}:${{ needs.setup.outputs.image_tag }}

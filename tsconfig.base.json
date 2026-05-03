@@ -7,7 +7,7 @@
   // shared across every package, service, and application in the monorepo.
   //
   // Every package-level tsconfig.json MUST extend this file:
-  //   "extends": "../../tsconfig.base.json"    (packages/* and backend/*)
+  //   "extends": "../../tsconfig.base.json"    (packages/* and services/*)
   //   "extends": "../../../tsconfig.base.json"  (applications/*/*)
   //
   // Packages SHOULD override only the settings they legitimately need to

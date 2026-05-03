@@ -151,11 +151,11 @@ Yarn workspaces handles package linking automatically — `lerna bootstrap` is n
 Each service reads its configuration from a `.env` file in its own directory. Copy the provided `.env.example` files and fill in your credentials:
 
 ```bash
-cp backend/api-gateway/.env.example         backend/api-gateway/.env
-cp backend/owner-service/.env.example       backend/owner-service/.env
-cp backend/admin-service/.env.example       backend/admin-service/.env
-cp backend/super-admin-service/.env.example backend/super-admin-service/.env
-cp backend/media-service/.env.example       backend/media-service/.env
+cp services/api-gateway/.env.example         services/api-gateway/.env
+cp services/owner-service/.env.example       services/owner-service/.env
+cp services/admin-service/.env.example       services/admin-service/.env
+cp services/super-admin-service/.env.example services/super-admin-service/.env
+cp services/media-service/.env.example       services/media-service/.env
 ```
 
 ### Run in Development
@@ -165,7 +165,7 @@ cp backend/media-service/.env.example       backend/media-service/.env
 yarn start:dev
 
 # Or start a single service directly
-cd backend/api-gateway && yarn start:dev
+cd services/api-gateway && yarn start:dev
 
 # Run a Lerna target across all packages
 yarn lerna run start:dev --stream
@@ -215,7 +215,7 @@ npx nx affected --target=lint
 npx nx affected --target=type-check
 
 # Auto-fix lint issues in a single service
-cd backend/owner-service && npx eslint "{src,apps,libs,test}/**/*.ts" --fix
+cd services/owner-service && npx eslint "{src,apps,libs,test}/**/*.ts" --fix
 
 # Check formatting (CI-safe, exits non-zero if files differ)
 yarn format:check
@@ -301,7 +301,7 @@ alankapuri-my-society/                  ← git root
 │           ├── package.json            ← @society/super-admin-app-web (lint: npx eslint, type-check: npx tsc)
 │           └── tsconfig.json
 │
-├── backend/
+├── services/
 │   ├── api-gateway/                    ← ★ NestJS · Auth, OTP/JWT/TOTP 2FA, rate-limiting, proxying
 │   │   ├── src/
 │   │   │   ├── main.ts                 ← Bootstrap (port 3000, globalPrefix api/v1)

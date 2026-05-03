@@ -11,11 +11,11 @@
     "applications/admin-app/web",
     "applications/super-admin-app/mobile",
     "applications/super-admin-app/web",
-    "backend/api-gateway",
-    "backend/owner-service",
-    "backend/admin-service",
-    "backend/super-admin-service",
-    "backend/media-service",
+    "services/api-gateway",
+    "services/owner-service",
+    "services/admin-service",
+    "services/super-admin-service",
+    "services/media-service",
     "packages/*"
   ],
   "scripts": {

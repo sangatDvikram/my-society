@@ -36,24 +36,24 @@
 /packages/shared-i18n/                  @sangatDvikram
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Backend microservices
+# Backend microservices (services/)
 # ──────────────────────────────────────────────────────────────────────────────
-/backend/                               @sangatDvikram
+/services/                              @sangatDvikram
 
 # API Gateway — auth, JWT/OTP, request routing
-/backend/api-gateway/                   @sangatDvikram
+/services/api-gateway/                  @sangatDvikram
 
 # Owner Service — flats, maintenance, visitor logs, payments, rentals, events
-/backend/owner-service/                 @sangatDvikram
+/services/owner-service/                @sangatDvikram
 
 # Admin Service — societies, staff, announcements, audit PDFs, AdminJS panel
-/backend/admin-service/                 @sangatDvikram
+/services/admin-service/                @sangatDvikram
 
 # Super Admin Service — onboarding, subscriptions, feature flags, KMS rotation
-/backend/super-admin-service/           @sangatDvikram
+/services/super-admin-service/          @sangatDvikram
 
 # Media Service — image upload, Sharp transforms, CloudFront variant caching
-/backend/media-service/                 @sangatDvikram
+/services/media-service/                @sangatDvikram
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Client applications

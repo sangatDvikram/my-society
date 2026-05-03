@@ -95,13 +95,13 @@
 
 > **Goal:** Implement the dual-column phone storage pattern (AES-256-GCM reversible + HMAC-SHA256 deterministic) driven entirely by environment-variable keys.
 
-- [x] **02.2.1** `backend/api-gateway/src/common/crypto/kms.service.ts` — `KmsService` reads `ENCRYPTION_DEK` + `HMAC_SECRET` as 32-byte hex from environment variables; wraps key access so all crypto modules remain agnostic of the injection mechanism
-- [x] **02.2.2** `backend/api-gateway/src/common/crypto/phone-crypto.service.ts` — `PhoneCryptoService`:
+- [x] **02.2.1** `services/api-gateway/src/common/crypto/kms.service.ts` — `KmsService` reads `ENCRYPTION_DEK` + `HMAC_SECRET` as 32-byte hex from environment variables; wraps key access so all crypto modules remain agnostic of the injection mechanism
+- [x] **02.2.2** `services/api-gateway/src/common/crypto/phone-crypto.service.ts` — `PhoneCryptoService`:
   - `normaliseE164(raw: string): string` — strips spaces/dashes, prepends country code
   - `hashPhone(raw: string): string` — `HMAC-SHA256(normalised, HMAC_SECRET).hex()`
   - `encryptPhone(raw: string): Buffer` — AES-256-GCM; layout `[IV(12)][AuthTag(16)][Ciphertext]`
   - `decryptPhone(cipher: Buffer): string` — inverse of encryptPhone
-- [x] **02.2.3** `backend/api-gateway/src/common/crypto/crypto.module.ts` — `CryptoModule` exporting `KmsService` and `PhoneCryptoService`; `isGlobal: true` so every module in the gateway can inject them
+- [x] **02.2.3** `services/api-gateway/src/common/crypto/crypto.module.ts` — `CryptoModule` exporting `KmsService` and `PhoneCryptoService`; `isGlobal: true` so every module in the gateway can inject them
 - [x] **02.2.4** Unit tests for `PhoneCryptoService` — 15 tests passing (normalise, hash, encrypt→decrypt round-trip, tampered-tag throws, compareHashes)
 - [x] **02.2.5** Add `.env.example` entries: `ENCRYPTION_DEK=<32-byte-hex>`, `HMAC_SECRET=<32-byte-hex>`
 
@@ -111,27 +111,27 @@
 
 **02.3.A — OTP Flow**
 - [ ] **02.3.1** Install deps: `@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt`; dev types: `@types/passport-jwt`
-- [ ] **02.3.2** `backend/api-gateway/src/auth/otp/otp.service.ts` — `generateOtp(): string` (6-digit crypto-random); `storeOtp(phoneHash, otp, ttl=300s)` → store `bcrypt`-hashed OTP in Redis; `validateOtp(phoneHash, otp): boolean`
-- [ ] **02.3.3** `backend/api-gateway/src/auth/otp/sms.service.ts` — `SmsService` stub: logs OTP to console in dev (`NODE_ENV !== 'production'`); production: calls Twilio/MSG91 via env-configured provider
+- [ ] **02.3.2** `services/api-gateway/src/auth/otp/otp.service.ts` — `generateOtp(): string` (6-digit crypto-random); `storeOtp(phoneHash, otp, ttl=300s)` → store `bcrypt`-hashed OTP in Redis; `validateOtp(phoneHash, otp): boolean`
+- [ ] **02.3.3** `services/api-gateway/src/auth/otp/sms.service.ts` — `SmsService` stub: logs OTP to console in dev (`NODE_ENV !== 'production'`); production: calls Twilio/MSG91 via env-configured provider
 - [ ] **02.3.4** `POST /auth/otp/send` controller — accepts `SendOtpDto` (backed by `sendOtpSchema`); calls `PhoneCryptoService.hashPhone` → `OtpService.storeOtp` → `SmsService.sendOtp`; returns `{ message: 'OTP sent' }`
 
 **02.3.B — JWT Issuance & Validation**
-- [ ] **02.3.5** `backend/api-gateway/src/auth/strategies/jwt.strategy.ts` — `JwtStrategy extends PassportStrategy(Strategy)` using `HS256` secret (dev) / `RS256` public key (prod); validates payload shape against `JwtPayload` interface
-- [ ] **02.3.6** `backend/api-gateway/src/auth/guards/jwt-auth.guard.ts` — `JwtAuthGuard extends AuthGuard('jwt')`; throws `UnauthorizedException` on invalid token
+- [ ] **02.3.5** `services/api-gateway/src/auth/strategies/jwt.strategy.ts` — `JwtStrategy extends PassportStrategy(Strategy)` using `HS256` secret (dev) / `RS256` public key (prod); validates payload shape against `JwtPayload` interface
+- [ ] **02.3.6** `services/api-gateway/src/auth/guards/jwt-auth.guard.ts` — `JwtAuthGuard extends AuthGuard('jwt')`; throws `UnauthorizedException` on invalid token
 - [ ] **02.3.7** `POST /auth/otp/verify` — validates OTP via `OtpService`; issues `accessToken` (15 min, HS256) + `refreshToken` (30 days, stored as `bcrypt` hash in Redis); returns `AuthTokenPair`
 - [ ] **02.3.8** `POST /auth/token/refresh` — accepts `RefreshTokenDto`; validates refresh token hash from Redis; re-issues `accessToken`; returns new `AuthTokenPair`
 - [ ] **02.3.9** `POST /auth/token/revoke` — deletes refresh token hash from Redis (logout)
 
 **02.3.C — RBAC**
-- [ ] **02.3.10** `backend/api-gateway/src/auth/decorators/roles.decorator.ts` — `@Roles(...roles: UserRole[])` metadata decorator using `SetMetadata(ROLES_KEY, roles)`
-- [ ] **02.3.11** `backend/api-gateway/src/auth/guards/roles.guard.ts` — `RolesGuard implements CanActivate`; reads `UserRole[]` from reflector; compares `request.user.role`; blocks cross-society access (`user.societyId !== param societyId`)
+- [ ] **02.3.10** `services/api-gateway/src/auth/decorators/roles.decorator.ts` — `@Roles(...roles: UserRole[])` metadata decorator using `SetMetadata(ROLES_KEY, roles)`
+- [ ] **02.3.11** `services/api-gateway/src/auth/guards/roles.guard.ts` — `RolesGuard implements CanActivate`; reads `UserRole[]` from reflector; compares `request.user.role`; blocks cross-society access (`user.societyId !== param societyId`)
 
 **02.3.D — TOTP 2FA (Super Admin)**
 - [ ] **02.3.12** Install `otplib`
-- [ ] **02.3.13** `backend/api-gateway/src/auth/totp/totp.service.ts` — `generateSecret()` returns `{ secret, otpauth_url }`; `verifyToken(secret, token): boolean` using `totp.verify()`
+- [ ] **02.3.13** `services/api-gateway/src/auth/totp/totp.service.ts` — `generateSecret()` returns `{ secret, otpauth_url }`; `verifyToken(secret, token): boolean` using `totp.verify()`
 - [ ] **02.3.14** `POST /auth/2fa/totp/setup` — guarded by `@Roles(UserRole.SUPER_ADMIN)`; returns TOTP secret + QR code URI
 - [ ] **02.3.15** `POST /auth/2fa/totp/verify` — accepts `VerifyTotpDto`; on success promotes JWT claim `totpVerified: true`
-- [ ] **02.3.16** `backend/api-gateway/src/auth/auth.module.ts` — wires all providers; imports `CryptoModule`, `JwtModule`, `PassportModule`
+- [ ] **02.3.16** `services/api-gateway/src/auth/auth.module.ts` — wires all providers; imports `CryptoModule`, `JwtModule`, `PassportModule`
 
 #### 02.4 Security Guards — Rate Limiting + Webhook Signature
 
@@ -139,7 +139,7 @@
 
 - [ ] **02.4.1** Install `@nestjs/throttler`; configure `ThrottlerModule.forRoot` in `AppModule` with global defaults; custom `OtpThrottlerGuard` with stricter limits (`5 req / 600 s`) applied only to OTP endpoints
 - [ ] **02.4.2** Enable `rawBody: true` in `NestFactory.create` (`main.ts`); add `express.json({ verify: (req, _, buf) => { req.rawBody = buf } })` middleware for raw body preservation
-- [ ] **02.4.3** `backend/api-gateway/src/common/guards/webhook-signature.guard.ts` — `WebhookSignatureGuard implements CanActivate`; reads `X-Razorpay-Signature` header; computes `HMAC-SHA256(rawBody, RAZORPAY_WEBHOOK_SECRET)`; uses `timingSafeEqual` for constant-time comparison
+- [ ] **02.4.3** `services/api-gateway/src/common/guards/webhook-signature.guard.ts` — `WebhookSignatureGuard implements CanActivate`; reads `X-Razorpay-Signature` header; computes `HMAC-SHA256(rawBody, RAZORPAY_WEBHOOK_SECRET)`; uses `timingSafeEqual` for constant-time comparison
 - [ ] **02.4.4** Unit tests for `WebhookSignatureGuard` — valid signature passes; tampered body fails; missing header throws `UnauthorizedException`
 
 #### 02.5 Key Rotation Batch Jobs (scaffold)
