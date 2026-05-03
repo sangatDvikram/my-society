@@ -18,21 +18,21 @@ import {
  */
 export class CreateVisitorLogDto {
   @IsUUID()
-  societyId: string
+  societyId!: string
 
   @IsUUID()
-  flatId: string
+  flatId!: string
 
   @IsString()
   @IsNotEmpty()
-  visitorName: string
+  visitorName!: string
 
   /** E.164 normalised phone — api-gateway ensures this format before sending */
   @IsString()
   @Matches(/^\+[1-9]\d{6,14}$/, {
     message: 'visitorPhone must be a valid E.164 number',
   })
-  visitorPhone: string
+  visitorPhone!: string
 
   @IsString()
   @IsOptional()
@@ -40,7 +40,7 @@ export class CreateVisitorLogDto {
 
   @IsString()
   @IsNotEmpty()
-  purpose: string
+  purpose!: string
 
   @IsBoolean()
   @IsOptional()

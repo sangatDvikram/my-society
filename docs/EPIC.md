@@ -25,7 +25,7 @@
 
 | # | Epic | Story Points |
 |---|------|:---:|
-| EPIC-01 | Monorepo, Infrastructure & DevOps | 55 |
+| EPIC-01 | Monorepo, Infrastructure & DevOps | 21 |
 | EPIC-02 | Authentication, Encryption & Security | 34 |
 | EPIC-03 | Society, Wing & Flat Management | 21 |
 | EPIC-04 | Visitor Logging System | 34 |
@@ -45,10 +45,10 @@
 | EPIC-18 | Super Admin App — Web (Next.js) | 34 |
 | EPIC-19 | Shared Packages & Design System | 21 |
 | EPIC-20 | GDPR Compliance & Data Governance | 21 |
-| | **TOTAL** | **749 SP** |
+| | **TOTAL** | **715 SP** |
 
-> **Velocity assumption:** ~45 SP / 2-week sprint (team of 4–6 engineers)  
-> **Estimated timeline:** ~17 sprints ≈ **8–9 months**
+> **Velocity assumption:** ~45 SP / 2-week sprint (team of 4–6 engineers)
+> **Estimated timeline:** ~16 sprints ≈ **8 months**
 
 ---
 
@@ -56,7 +56,7 @@
 
 ---
 
-### ✅ EPIC-01 · Monorepo, Infrastructure & DevOps `55 SP`
+### ✅ EPIC-01 · Monorepo, Infrastructure & DevOps `21 SP`
 
 - [x] Initialise Lerna monorepo with npm workspaces and independent versioning
 - [x] Configure root `tsconfig.base.json` and per-package `tsconfig.json` files
@@ -64,39 +64,92 @@
 - [x] Author GitHub Actions CI workflow (lint → type-check → test → SAST → Snyk)
 - [x] Configure global ESLint 9 flat config (`eslint.config.mjs`), Prettier (`.prettierrc.json`), and root `jsconfig.json`
 - [x] Scaffold application and backend service boilerplates (`shared-nextjs-config`, `shared-ui-tokens` preset, Next.js 15 web apps with Tailwind + Oat UI, NestJS services with TypeORM)
-- [x] Author GitHub Actions CD/deploy workflow (Docker build → ECR push → Helm upgrade)
+- [x] Author GitHub Actions CD/deploy workflow (Docker build → container registry push → deploy)
 - [x] Write multi-stage Dockerfiles for all five NestJS services (`api-gateway`, `owner-service`, `admin-service`, `super-admin-service`, `media-service`) + root `.dockerignore`
 - [x] Configure Oat UI (`@knadh/oat` v0.5.0) in all three Next.js web apps — `postcss-import` pipeline, `@import` in `globals.css`, CSS custom property overrides, `src/types/global.d.ts` CSS module declarations
 - [x] Implement `shared-nextjs-config` `createNextConfig` factory with eager `copySharedAssets` (copies `shared-ui-assets` → `public/` at config-eval time; works for both Turbopack and webpack)
 - [x] Move components to `@society/shared-ui-components` — `ClickCounter` component in `src/web/`, barrel exports in `src/web/index.ts` and `src/index.ts`, package exports point to `./src` for `transpilePackages`
-- [ ] Provision AWS EKS cluster with namespaces per service
-- [ ] Configure Horizontal Pod Autoscaler (HPA) per service (CPU 70% threshold)
-- [ ] Provision AWS RDS PostgreSQL 16 (Multi-AZ primary + 2 read replicas)
-- [ ] Provision AWS ElastiCache Redis cluster (BullMQ + session storage)
-- [ ] Set up AWS S3 buckets with KMS encryption and lifecycle policies (Glacier at 1 yr, 7 yr retention for audit reports)
-- [ ] Configure AWS CloudFront distribution for media-service CDN
-- [ ] Set up AWS Secrets Manager + KMS key hierarchy (HMAC key, DEK per society)
-- [ ] Deploy monitoring stack: Prometheus, Grafana, Loki, Tempo
-- [ ] Write Helm charts with rolling-update strategy and zero-downtime deploys
-- [ ] Configure AWS WAF rules on ALB
+
 
 ---
 
 ### ✅ EPIC-02 · Authentication, Encryption & Security `34 SP`
 
-- [ ] Phone OTP generation and delivery (SMS gateway integration)
-- [ ] E.164 phone number normalisation utility
-- [ ] `PhoneCryptoService` — AES-256-GCM encrypt / decrypt with KMS-managed DEK
-- [ ] HMAC-SHA256 phone hash for deterministic lookup (`phone_hash` column)
-- [ ] JWT issuance and validation (`jwt.strategy.ts`, `jwt-auth.guard.ts`)
-- [ ] TOTP 2FA for Super Admin (Google Authenticator compatible; `otplib`)
-- [ ] PIN-based second factor for Admin
-- [ ] Role-based access guard (`roles.guard.ts`) enforcing Owner / Admin / Super Admin / Staff roles
-- [ ] API Gateway rate limiting (OTP endpoint: 5 req/min per phone)
-- [ ] Webhook HMAC-SHA256 signature verification guard (`webhook-signature.guard.ts`)
-- [ ] KMS DEK key rotation job (re-encrypt all `phone_encrypted` rows in batches of 1,000)
-- [ ] HMAC secret rotation (re-compute all `phone_hash` values in low-traffic window)
-- [ ] IP allowlisting for Admin/Super Admin routes (VPC-internal load balancer)
+#### 02.1 Shared Foundation — `@society/shared-types` + `@society/shared-validators`
+
+> **Goal:** Establish the single-source-of-truth type contracts and validation schemas consumed by every backend service and frontend app.
+
+- [x] **02.1.1** `packages/shared-types/src/auth/index.ts` — `UserRole` enum (`OWNER | ADMIN | SUPER_ADMIN | STAFF | GUARD`); `JwtPayload` interface (`sub`, `role`, `societyId`, `flatId?`, `iat`, `exp`); `AuthTokenPair` interface (`accessToken`, `refreshToken`)
+- [x] **02.1.2** `packages/shared-types/src/phone/index.ts` — `PhoneFields` interface (`phoneHash: string`, `phoneEncrypted: string`); `E164Phone` branded type alias
+- [x] **02.1.3** `packages/shared-types/src/index.ts` — root barrel re-exporting all sub-modules; update `package.json` `main`/`types` to `./src/index.ts` (source-first, no build step for dev)
+- [x] **02.1.4** Install `zod` as a dependency in `packages/shared-validators`; update `package.json` `main`/`types` to `./src/index.ts`
+- [x] **02.1.5** `packages/shared-validators/src/auth/index.ts` — Zod schemas:
+  - `phoneSchema` — E.164 regex (`/^\+[1-9]\d{6,14}$/`) with `.transform(normaliseE164)`
+  - `sendOtpSchema` — `{ phone: phoneSchema, role: z.nativeEnum(UserRole) }`
+  - `verifyOtpSchema` — `{ phone: phoneSchema, otp: z.string().length(6).regex(/^\d+$/), role: z.nativeEnum(UserRole) }`
+  - `refreshTokenSchema` — `{ refreshToken: z.string().min(1) }`
+  - `verifyTotpSchema` — `{ totp: z.string().length(6).regex(/^\d+$/) }`
+- [x] **02.1.6** `packages/shared-validators/src/index.ts` — root barrel
+
+#### 02.2 Encryption Layer — `PhoneCryptoService` + `KmsService` (`api-gateway`)
+
+> **Goal:** Implement the dual-column phone storage pattern (AES-256-GCM reversible + HMAC-SHA256 deterministic) driven entirely by environment-variable keys.
+
+- [x] **02.2.1** `backend/api-gateway/src/common/crypto/kms.service.ts` — `KmsService` reads `ENCRYPTION_DEK` + `HMAC_SECRET` as 32-byte hex from environment variables; wraps key access so all crypto modules remain agnostic of the injection mechanism
+- [x] **02.2.2** `backend/api-gateway/src/common/crypto/phone-crypto.service.ts` — `PhoneCryptoService`:
+  - `normaliseE164(raw: string): string` — strips spaces/dashes, prepends country code
+  - `hashPhone(raw: string): string` — `HMAC-SHA256(normalised, HMAC_SECRET).hex()`
+  - `encryptPhone(raw: string): Buffer` — AES-256-GCM; layout `[IV(12)][AuthTag(16)][Ciphertext]`
+  - `decryptPhone(cipher: Buffer): string` — inverse of encryptPhone
+- [x] **02.2.3** `backend/api-gateway/src/common/crypto/crypto.module.ts` — `CryptoModule` exporting `KmsService` and `PhoneCryptoService`; `isGlobal: true` so every module in the gateway can inject them
+- [x] **02.2.4** Unit tests for `PhoneCryptoService` — 15 tests passing (normalise, hash, encrypt→decrypt round-trip, tampered-tag throws, compareHashes)
+- [x] **02.2.5** Add `.env.example` entries: `ENCRYPTION_DEK=<32-byte-hex>`, `HMAC_SECRET=<32-byte-hex>`
+
+#### 02.3 `AuthModule` — OTP · JWT · TOTP · RBAC (`api-gateway`)
+
+> **Goal:** Full authentication pipeline in `api-gateway`: OTP dispatch → JWT issuance → TOTP 2FA → role-gated route guards.
+
+**02.3.A — OTP Flow**
+- [ ] **02.3.1** Install deps: `@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt`; dev types: `@types/passport-jwt`
+- [ ] **02.3.2** `backend/api-gateway/src/auth/otp/otp.service.ts` — `generateOtp(): string` (6-digit crypto-random); `storeOtp(phoneHash, otp, ttl=300s)` → store `bcrypt`-hashed OTP in Redis; `validateOtp(phoneHash, otp): boolean`
+- [ ] **02.3.3** `backend/api-gateway/src/auth/otp/sms.service.ts` — `SmsService` stub: logs OTP to console in dev (`NODE_ENV !== 'production'`); production: calls Twilio/MSG91 via env-configured provider
+- [ ] **02.3.4** `POST /auth/otp/send` controller — accepts `SendOtpDto` (backed by `sendOtpSchema`); calls `PhoneCryptoService.hashPhone` → `OtpService.storeOtp` → `SmsService.sendOtp`; returns `{ message: 'OTP sent' }`
+
+**02.3.B — JWT Issuance & Validation**
+- [ ] **02.3.5** `backend/api-gateway/src/auth/strategies/jwt.strategy.ts` — `JwtStrategy extends PassportStrategy(Strategy)` using `HS256` secret (dev) / `RS256` public key (prod); validates payload shape against `JwtPayload` interface
+- [ ] **02.3.6** `backend/api-gateway/src/auth/guards/jwt-auth.guard.ts` — `JwtAuthGuard extends AuthGuard('jwt')`; throws `UnauthorizedException` on invalid token
+- [ ] **02.3.7** `POST /auth/otp/verify` — validates OTP via `OtpService`; issues `accessToken` (15 min, HS256) + `refreshToken` (30 days, stored as `bcrypt` hash in Redis); returns `AuthTokenPair`
+- [ ] **02.3.8** `POST /auth/token/refresh` — accepts `RefreshTokenDto`; validates refresh token hash from Redis; re-issues `accessToken`; returns new `AuthTokenPair`
+- [ ] **02.3.9** `POST /auth/token/revoke` — deletes refresh token hash from Redis (logout)
+
+**02.3.C — RBAC**
+- [ ] **02.3.10** `backend/api-gateway/src/auth/decorators/roles.decorator.ts` — `@Roles(...roles: UserRole[])` metadata decorator using `SetMetadata(ROLES_KEY, roles)`
+- [ ] **02.3.11** `backend/api-gateway/src/auth/guards/roles.guard.ts` — `RolesGuard implements CanActivate`; reads `UserRole[]` from reflector; compares `request.user.role`; blocks cross-society access (`user.societyId !== param societyId`)
+
+**02.3.D — TOTP 2FA (Super Admin)**
+- [ ] **02.3.12** Install `otplib`
+- [ ] **02.3.13** `backend/api-gateway/src/auth/totp/totp.service.ts` — `generateSecret()` returns `{ secret, otpauth_url }`; `verifyToken(secret, token): boolean` using `totp.verify()`
+- [ ] **02.3.14** `POST /auth/2fa/totp/setup` — guarded by `@Roles(UserRole.SUPER_ADMIN)`; returns TOTP secret + QR code URI
+- [ ] **02.3.15** `POST /auth/2fa/totp/verify` — accepts `VerifyTotpDto`; on success promotes JWT claim `totpVerified: true`
+- [ ] **02.3.16** `backend/api-gateway/src/auth/auth.module.ts` — wires all providers; imports `CryptoModule`, `JwtModule`, `PassportModule`
+
+#### 02.4 Security Guards — Rate Limiting + Webhook Signature
+
+> **Goal:** OTP endpoint throttling (5 req / 10 min / IP) and Razorpay webhook HMAC-SHA256 signature verification.
+
+- [ ] **02.4.1** Install `@nestjs/throttler`; configure `ThrottlerModule.forRoot` in `AppModule` with global defaults; custom `OtpThrottlerGuard` with stricter limits (`5 req / 600 s`) applied only to OTP endpoints
+- [ ] **02.4.2** Enable `rawBody: true` in `NestFactory.create` (`main.ts`); add `express.json({ verify: (req, _, buf) => { req.rawBody = buf } })` middleware for raw body preservation
+- [ ] **02.4.3** `backend/api-gateway/src/common/guards/webhook-signature.guard.ts` — `WebhookSignatureGuard implements CanActivate`; reads `X-Razorpay-Signature` header; computes `HMAC-SHA256(rawBody, RAZORPAY_WEBHOOK_SECRET)`; uses `timingSafeEqual` for constant-time comparison
+- [ ] **02.4.4** Unit tests for `WebhookSignatureGuard` — valid signature passes; tampered body fails; missing header throws `UnauthorizedException`
+
+#### 02.5 Key Rotation Batch Jobs (scaffold)
+
+> **Goal:** Scaffold the BullMQ jobs that re-encrypt all `phone_encrypted` columns with a rotated DEK and re-hash all `phone_hash` columns with a rotated HMAC secret.
+
+- [ ] **02.5.1** Install `bullmq`, `@nestjs/bullmq`, `ioredis`
+- [ ] **02.5.2** `DekRotationJob` — fetches all rows with `phone_encrypted` in batches of 1 000; decrypts with old DEK → re-encrypts with new DEK; updates row in a single transaction; updates `ENCRYPTION_DEK` environment variable after 100% of rows migrated
+- [ ] **02.5.3** `HmacRotationJob` — re-computes all `phone_hash` values with new HMAC secret in batches of 1 000; dual-writes during transition (old hash + new hash) until cutover
+- [ ] **02.5.4** `POST /admin/crypto/rotate-dek` and `POST /admin/crypto/rotate-hmac` — Super Admin only; enqueues the respective BullMQ job; returns `{ jobId, status: 'queued' }`
 
 ---
 
@@ -108,7 +161,7 @@
 - [ ] Owner onboarding by Admin — create user, send invite OTP
 - [ ] Staff sub-role management (Guard, Maintenance Staff, Accountant)
 - [ ] Society configuration endpoint (visitor hours, parking limits, SLA timers per category)
-- [ ] Super Admin society provisioning workflow (creates tenant partition + KMS DEK)
+- [ ] Super Admin society provisioning workflow (creates society tenant record, provisions first Admin)
 - [ ] Subscription tier management and feature-flag propagation (≤ 60 s)
 - [ ] Society deactivation (mark inactive, preserve data, block logins)
 - [ ] Society-scoped data isolation enforcement across all queries
@@ -137,7 +190,7 @@
 ### ✅ EPIC-05 · Maintenance Request System `21 SP`
 
 - [ ] `MaintenanceRequest` entity with category, description, photos, status enum
-- [ ] Owner raises request — photos optional (S3 upload); Admin notified
+- [ ] Owner raises request — photos optional (object storage upload); Admin notified
 - [ ] Admin triage and assignment to Maintenance Staff; staff notified via push
 - [ ] State machine: `OPEN → IN_PROGRESS → RESOLVED → CLOSED`
 - [ ] Owner reopen within 48 h (adds audit trail entry)
@@ -159,15 +212,14 @@
 - [ ] Webhook idempotency using `webhookEventId` deduplication
 - [ ] Admin-initiated refund via Razorpay Refund API; status tracked in `payments` table (`PAY-009`)
 - [ ] Test Mode support — credentials injected via env vars; never hardcoded (`PAY-010`)
-- [ ] All Razorpay API keys stored in AWS KMS / Secrets Manager; rotation without redeployment (`PAY-011`)
-- [ ] Payment receipt PDF generation (Puppeteer) — stored in S3; pre-signed 24 h download link (`PAY-012`)
+- [ ] Payment receipt PDF generation (Puppeteer) — stored in object storage; pre-signed 24 h download link (`PAY-012`)
 - [ ] Facility booking payments classified under `FACILITY_BOOKING` in the inflow ledger (`FAC-013`)
 
 ---
 
 ### ✅ EPIC-07 · Financial Year Audit & PDF Reports `34 SP`
 
-- [ ] `AuditReport` entity with versioning, status enum, SHA-256 checksum, S3 key (`7.2.7`)
+- [ ] `AuditReport` entity with versioning, status enum, SHA-256 checksum, storage object key (`7.2.7`)
 - [ ] BullMQ scheduled job — auto-generate Society-Level Audit PDF at 00:01 IST on April 1 (`PAY-013`)
 - [ ] Owner-Level Annual Statement PDF — synchronous (≤ 12 txn) + async BullMQ path (`PAY-014, PAY-021`)
 - [ ] Society Audit PDF content: cover page, executive summary, month-wise inflow/outflow, flat-wise collection, outstanding dues, refunds, transaction ledger appendix (`PAY-015`)
@@ -175,9 +227,8 @@
 - [ ] SHA-256 checksum embedding in PDF XMP metadata; checksum stored in DB (`PAY-017`)
 - [ ] Admin on-demand regeneration — creates new version record; previous version archived (`PAY-018`)
 - [ ] Admin review + explicit publish workflow; draft visible only to Admin/Accountant (`PAY-019`)
-- [ ] S3 path convention: `audit-reports/{societyId}/{financialYear}/{reportType}/{version}.pdf` (`PAY-020`)
-- [ ] S3 Lifecycle policy: transition to Glacier after 1 year; 7-year retention (`PAY-020`)
-- [ ] Pre-signed S3 URLs for download (max 1-hour expiry); public S3 access blocked (`PAY-022`)
+- [ ] Object storage path convention: `audit-reports/{societyId}/{financialYear}/{reportType}/{version}.pdf` (`PAY-020`)
+- [ ] Pre-signed download URLs (max 1-hour expiry); public bucket access blocked (`PAY-022`)
 - [ ] Role-based access: Admin/Accountant (draft + published), Owner (published only), Super Admin (all) (`PAY-023`)
 - [ ] Owner push + in-app notification when Admin publishes the FY report (`OWN-012`)
 
@@ -202,11 +253,11 @@
 
 - [ ] `TenantProfile` entity — encrypted phone (dual-column) + encrypted PAN + `panLast4` (`7.2.3b`)
 - [ ] `FlatRental` entity with rental terms, status enum (`ACTIVE | ENDED | EXPIRED`), audit fields (`7.2.3c`)
-- [ ] `RentalDocument` entity — version history, S3 key, SUPERSEDED flag
+- [ ] `RentalDocument` entity — version history, object storage key, SUPERSEDED flag
 - [ ] One-active-tenancy-per-flat constraint returning `409 Conflict` (`RENT-004`)
-- [ ] Pre-signed S3 PUT URL generation for Rent Agreement + PAN Card upload (`RENT-006`)
-- [ ] Document confirmation endpoint — creates DB record after direct S3 upload (`RENT-006`)
-- [ ] S3 key convention: `rental-documents/{societyId}/{flatId}/{rentalId}/{docType}/{v}_{filename}` (`RENT-008`)
+- [ ] Pre-signed upload URL generation for Rent Agreement + PAN Card upload (`RENT-006`)
+- [ ] Document confirmation endpoint — creates DB record after direct upload (`RENT-006`)
+- [ ] Object storage key convention: `rental-documents/{societyId}/{flatId}/{rentalId}/{docType}/{v}_{filename}` (`RENT-008`)
 - [ ] Version archiving — previous document version flagged `SUPERSEDED`, never deleted (`RENT-007`)
 - [ ] Flat status update to `RENTED` on tenancy creation; Admin notified (`RENT-009`)
 - [ ] Tenancy end flow — flat status → `VACANT`; Admin notified; 90-day retention before GDPR anonymisation (`RENT-010`)
@@ -222,7 +273,7 @@
 - [ ] `CommonFacility` entity with pricing model, booking window config, cancellation policy (`7.2.9`)
 - [ ] `FacilityBlackout` entity with datetime range and reason (`7.2.9`)
 - [ ] `FacilityBooking` entity with full state machine and payment linkage (`7.2.10`)
-- [ ] Facility CRUD — Admin/Super Admin only; up to 10 S3 photos per facility (`FAC-001, FAC-002`)
+- [ ] Facility CRUD — Admin/Super Admin only; up to 10 photos per facility stored in object storage (`FAC-001, FAC-002`)
 - [ ] Pricing model configuration — Fixed / Hourly / Variable (JSON schedule in paise) (`FAC-003`)
 - [ ] Blackout period management — booking API returns `409` on overlap; calendar shows greyed dates (`FAC-004`)
 - [ ] Booking window enforcement — `maxAdvanceDays` and `minAdvanceHours` validation (`FAC-005`)
@@ -243,10 +294,10 @@
 ### ✅ EPIC-11 · Common Services Vendor Management `21 SP`
 
 - [ ] `VendorProfile` entity — encrypted phone, extensible `serviceCategory` varchar, status enum (`7.2.11`)
-- [ ] `VendorDocument` entity — S3 key, version, mime type, document type enum (`7.2.12`)
+- [ ] `VendorDocument` entity — object storage key, version, mime type, document type enum (`7.2.12`)
 - [ ] `VendorPhoneRevealLog` entity — audit trail for phone reveals (`7.2.13`)
 - [ ] Vendor CRUD (Admin/Super Admin only) — up to 5 supporting documents per vendor (`VND-001, VND-004`)
-- [ ] Document upload via pre-signed S3 PUT URLs (`society-vendor-documents` bucket, KMS) (`VND-005`)
+- [ ] Document upload via pre-signed upload URLs (`society-vendor-documents` bucket) (`VND-005`)
 - [ ] Extensible `serviceCategory` — seeded standard values; new categories without migration (`VND-003`)
 - [ ] Vendor status toggle (`ACTIVE ↔ INACTIVE`) — instant cache TTL-based visibility update (60 s) (`VND-006`)
 - [ ] Owner-facing directory — shows masked phone; single-tap "Reveal Phone" with 5-min client timer (`VND-007`)
@@ -280,11 +331,11 @@
 
 ### ✅ EPIC-13 · Event Media — Photos & Videos `21 SP`
 
-- [ ] `EventMedia` entity — media type, status, S3 key, thumbnail key, mime type (`7.2.16`)
-- [ ] Pre-signed S3 PUT URL request + confirm endpoint flow (`MED-004`)
+- [ ] `EventMedia` entity — media type, status, object storage key, thumbnail key, mime type (`7.2.16`)
+- [ ] Pre-signed upload URL request + confirm endpoint flow (`MED-004`)
 - [ ] Photo upload limits: JPEG/PNG/WEBP ≤ 20 MB each, max 50 per event (`MED-002`)
 - [ ] Video upload limits: MP4/MOV ≤ 500 MB each, max 5 per event (`MED-002`)
-- [ ] S3 bucket: `society-event-media` with server-side KMS encryption; key convention enforced (`MED-003`)
+- [ ] Storage bucket: `society-event-media` with server-side encryption; key convention enforced (`MED-003`)
 - [ ] BullMQ thumbnail job — Sharp 480×480 WebP thumbnail for photos (`MED-005`)
 - [ ] BullMQ thumbnail job — FFmpeg 1-second frame extraction for videos (`MED-005`)
 - [ ] Media gallery endpoint — returns metadata + thumbnail pre-signed URLs (1 h expiry) (`MED-006`)
@@ -346,7 +397,7 @@
 - [ ] Owner annual payment statement PDF request + download (OWN-011)
 - [ ] FY audit report notification + read-only PDF viewer (OWN-012)
 - [ ] Flat rental management — mark rented, add tenant details (OWN-013)
-- [ ] Rental document upload (rent agreement + PAN card) via pre-signed S3 flow (OWN-014)
+- [ ] Rental document upload (rent agreement + PAN card) via pre-signed upload flow (OWN-014)
 - [ ] Active tenancy detail view — masked phone, dates, document upload status (OWN-015)
 - [ ] End tenancy flow (OWN-016)
 - [ ] Tenant detail / document update flow (OWN-017)
@@ -359,7 +410,7 @@
 - [ ] Create society event form — type, dates, facility link, max participants (OWN-024)
 - [ ] Link event to facility booking (OWN-025)
 - [ ] RSVP to event; headcount display (OWN-026)
-- [ ] Event media upload — photos + videos via S3 flow (OWN-027)
+- [ ] Event media upload — photos + videos via object storage upload flow (OWN-027)
 - [ ] Society event feed — scrollable, filterable, cursor-paginated (OWN-028)
 - [ ] Edit / cancel own event (OWN-029)
 - [ ] Mark event as completed (OWN-030)
@@ -453,10 +504,10 @@
 | Metric | Value |
 |--------|-------|
 | Total Epics | 20 |
-| Total Story Points | **749 SP** |
+| Total Story Points | **715 SP** |
 | Assumed Velocity | ~45 SP / 2-week sprint |
-| Estimated Sprints | ~17 sprints |
-| Estimated Timeline | **8–9 months** (team of 4–6 engineers) |
+| Estimated Sprints | ~16 sprints |
+| Estimated Timeline | **8 months** (team of 4–6 engineers) |
 
 ---
 

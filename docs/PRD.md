@@ -113,10 +113,10 @@ Super Admin (Platform Operator)
 | OWN-011 | I want to download a PDF statement of all payments I made to the society during a financial year, for my own tax records. | PDF generated on demand; covers April 1 – March 31; includes invoice number, date, amount, mode, and status; available within 60 s of request. |
 | OWN-012 | I want to receive a notification when the society's annual financial audit report has been published so I can review it. | Push + in-app notification sent when Admin marks the FY report as published; link to read-only PDF included. |
 | OWN-013 | I want to mark my flat as rented out and add my tenant's details (name, phone, email, address) so the society has an accurate occupancy record. | Tenant profile created; flat status updated to `RENTED`; society admin notified; tenant details encrypted at rest. |
-| OWN-014 | I want to upload a copy of the rent agreement and tenant's PAN card so the society can maintain legal compliance records. | Documents uploaded (PDF/image ≤ 10 MB each); stored AES-256-GCM encrypted in a private S3 bucket; owner and admin can download via pre-signed URLs; documents never publicly accessible. |
+| OWN-014 | I want to upload a copy of the rent agreement and tenant's PAN card so the society can maintain legal compliance records. | Documents uploaded (PDF/image ≤ 10 MB each); stored AES-256-GCM encrypted in private object storage; owner and admin can download via pre-signed URLs; documents never publicly accessible. |
 | OWN-015 | I want to view the active tenancy details for my flat at any time, including the rent period and documents I have uploaded. | Shows tenant name (masked phone), rent start/end dates, monthly rent amount, agreement expiry, and upload status of each document; full phone only shown to admin. |
 | OWN-016 | I want to end an active tenancy when my tenant vacates, so the flat is marked vacant and old tenant records are archived. | Tenancy marked `ENDED`; flat status reverted to `VACANT`; tenant profile soft-deleted (GDPR-compliant anonymisation after 90-day retention period); admin notified. |
-| OWN-017 | I want to update my tenant's details or replace the rent agreement document if it is renewed. | New document version uploaded; previous version archived in S3 with original upload timestamp; history retained for audit. |
+| OWN-017 | I want to update my tenant's details or replace the rent agreement document if it is renewed. | New document version uploaded; previous version archived in object storage with original upload timestamp; history retained for audit. |
 | OWN-018 | I want to browse all common facilities available in my society (clubhouse, gym, pool, etc.) so I know what I can book. | Facility list shows name, description, capacity, pricing type (fixed/hourly/variable), availability calendar, and photos; fetched from `admin-service`. |
 | OWN-019 | I want to request a booking of the clubhouse (or any common facility) for a private event on a specific date and time. | Booking request created with `PENDING_APPROVAL` status; society admin notified immediately; owner receives confirmation of submission. |
 | OWN-020 | I want to pay the facility booking fee online after my request is approved so the booking is confirmed. | Razorpay order created on approval; owner pays via app; on payment capture booking status moves to `CONFIRMED`; receipt sent. |
@@ -126,7 +126,7 @@ Super Admin (Platform Operator)
 | OWN-024 | I want to create a society event (festival celebration, game tournament, movie night, etc.) so that all residents can discover and join it. | Event created with `UPCOMING` status; visible to all flat owners in the society; Admin notified; event appears in the society event feed. |
 | OWN-025 | I want to optionally link my event to a common facility (e.g. hold a tournament in the clubhouse) so the booking and event are connected. | Event linked to an existing `CONFIRMED` `FacilityBooking`; availability validated; if the facility booking is cancelled the event is automatically updated to remove the venue link. |
 | OWN-026 | I want to set a participant limit and allow other owners to RSVP to my event so I can manage headcount. | RSVP count tracked in real time; owners who RSVP receive a confirmation; further RSVPs blocked once `maxParticipants` is reached; waitlist not supported in v1. |
-| OWN-027 | I want to upload photos and videos from my event so all society members can view them in the event gallery. | Photos (JPEG/PNG/WEBP, ≤ 20 MB each, max 50 per event) and videos (MP4/MOV, ≤ 500 MB each, max 5 per event) uploaded to S3; thumbnail auto-generated for each; visible to all owners in the society. |
+| OWN-027 | I want to upload photos and videos from my event so all society members can view them in the event gallery. | Photos (JPEG/PNG/WEBP, ≤ 20 MB each, max 50 per event) and videos (MP4/MOV, ≤ 500 MB each, max 5 per event) uploaded to object storage; thumbnail auto-generated for each; visible to all owners in the society. |
 | OWN-028 | I want to view a scrollable society event feed showing upcoming and past events from all owners so I stay connected with society activities. | Feed ordered by `startDatetime` descending for past events, ascending for upcoming; filterable by event type; each card shows banner image, title, organiser flat, date, RSVP count, and media preview. |
 | OWN-029 | I want to edit or cancel my event if plans change. | Owner may edit any field or cancel (status → `CANCELLED`) before the event `startDatetime`; all RSVPed members notified of changes; cancellation removes the linked facility booking association (does not auto-cancel the booking). |
 | OWN-030 | I want to mark my event as completed after it has taken place. | Owner or system (scheduled job) transitions status `ONGOING → COMPLETED` after `endDatetime` passes; event moves to the past section of the feed; media upload still allowed for 7 days post-completion. |
@@ -152,13 +152,13 @@ Super Admin (Platform Operator)
 | ADM-015 | I want to verify the bank account via Razorpay's penny-drop/reverse-penny-drop so I can confirm the account is live and correct. | Penny-drop or Reverse Penny Drop initiated via Razorpay API; on success the account status transitions to `VERIFIED`; admin receives confirmation notification. |
 | ADM-016 | I want to set one bank account as the primary settlement account for this society. | Only one account may be `PRIMARY` at a time; switching primary atomically deactivates the previous one; all future Razorpay settlements route to the new primary. |
 | ADM-017 | I want to view all bank accounts added for the society, including their verification status and Razorpay linked-account reference, so the accounts team can audit them. | List view shows masked account number (last 4 digits), IFSC, account holder name, verification status, Razorpay Fund Account ID, and `isPrimary` flag; full account number never exposed in the UI. |
-| ADM-018 | I want to register a common facility (e.g. clubhouse, gym, swimming pool, terrace garden) with its name, description, capacity, photos, and pricing so owners can discover and book it. | Facility saved with `ACTIVE` status; photos stored in S3; pricing model (fixed/hourly/variable) recorded; immediately visible to owners in their app. |
+| ADM-018 | I want to register a common facility (e.g. clubhouse, gym, swimming pool, terrace garden) with its name, description, capacity, photos, and pricing so owners can discover and book it. | Facility saved with `ACTIVE` status; photos stored in object storage; pricing model (fixed/hourly/variable) recorded; immediately visible to owners in their app. |
 | ADM-019 | I want to configure pricing for each facility — either a flat booking fee, an hourly rate, or a variable rate that depends on the day/slot (weekday vs weekend, morning vs evening). | Pricing model stored per facility; system calculates booking fee at request time based on the selected slot duration and pricing schedule; displayed to owner before they submit a request. |
 | ADM-020 | I want to define blackout dates for a facility (e.g. maintenance days, society events) during which no owner bookings are accepted. | Blackout dates stored; booking API returns `409 Conflict` for any slot overlapping a blackout date; owners see blocked dates highlighted on the availability calendar. |
 | ADM-021 | I want to review pending facility booking requests and approve or reject them with an optional reason. | On approval, Razorpay order created; owner notified to complete payment. On rejection, owner notified with reason; no charge raised. |
 | ADM-022 | I want to configure the cancellation and refund policy per facility (e.g. full refund if cancelled ≥ 48 h before slot, 50 % refund if ≥ 24 h, no refund otherwise). | Policy stored as a JSON schedule per facility; system calculates refund amount at cancellation time; Razorpay refund initiated automatically. |
 | ADM-023 | I want to view a calendar of all facility bookings across the society so I can spot conflicts and plan maintenance. | Calendar view filterable by facility, date range, and status; shows owner name, flat number, and booking duration per slot. |
-| ADM-024 | I want to register an empanelled common-service vendor (e.g. plumber, electrician, pest-control company) with their business details, service category, and supporting documents. | Vendor profile created in `ACTIVE` state; documents (GST certificate, trade licence, photo ID) uploaded to S3; vendor appears in owner-facing directory. |
+| ADM-024 | I want to register an empanelled common-service vendor (e.g. plumber, electrician, pest-control company) with their business details, service category, and supporting documents. | Vendor profile created in `ACTIVE` state; documents (GST certificate, trade licence, photo ID) uploaded to object storage; vendor appears in owner-facing directory. |
 | ADM-025 | I want to deactivate or re-activate a vendor so owners can only see currently approved vendors in their directory. | Status toggled between `ACTIVE` and `INACTIVE`; inactive vendors hidden from owner-facing directory immediately; historical booking references retained. |
 | ADM-026 | I want to view all vendors registered in the society, filter by service category or status, and download the vendor list as a CSV for records. | List view with pagination; filterable by `serviceCategory`, `status`, `createdAt`; CSV export (admin-only, gated by feature flag as per Section 16.9). |
 | ADM-027 | I want to view all society events created by owners so I have visibility over community activity. | Admin sees full event list with organiser, facility link, RSVP count, media count, and status; can filter by status, event type, or date range. |
@@ -239,7 +239,7 @@ Guard opens Gate Terminal (Admin App – Guard role)
 | `exit_guard_id` | UUID | Nullable FK → staff |
 | `approval_status` | ENUM | `PENDING`, `APPROVED`, `REJECTED`, `TIMEOUT` |
 | `pre_approved_token` | VARCHAR(64) | Nullable; hashed OTP/QR token |
-| `photo_url` | VARCHAR(512) | S3 presigned; GDPR-flagged |
+| `photo_url` | VARCHAR(512) | Pre-signed download URL; GDPR-flagged |
 | `gdpr_consent` | BOOLEAN | Required if photo captured |
 | `created_at` | TIMESTAMPTZ | |
 | `deleted_at` | TIMESTAMPTZ | Soft delete for GDPR erasure |
@@ -279,8 +279,7 @@ Guard opens Gate Terminal (Admin App – Guard role)
 | PAY-008 | Razorpay webhook events are verified using HMAC-SHA256 signature before processing. |
 | PAY-009 | Payment refunds initiated by Admin are processed via Razorpay Refund API; status tracked in the `payments` table. |
 | PAY-010 | The system supports Razorpay Test Mode in non-production environments; test credentials are injected via environment variables, never hardcoded. |
-| PAY-011 | All Razorpay API keys are stored in AWS KMS / Secrets Manager; rotated without redeployment. |
-| PAY-012 | Payment receipt PDFs are generated server-side and stored in S3; download links pre-signed with 24 h expiry. |
+| PAY-012 | Payment receipt PDFs are generated server-side and stored in object storage; download links pre-signed with 24 h expiry. |
 
 ### 5.5 Financial Year Audit & PDF Reports
 
@@ -308,9 +307,9 @@ All monetary movements are classified into two directions:
 | PAY-017 | Every generated PDF must embed a **SHA-256 content checksum** in its XMP metadata. The same checksum is stored in the `audit_reports` database table, enabling offline tamper verification. |
 | PAY-018 | Admin must be able to trigger on-demand regeneration of the Society-Level Annual Audit Report at any time before publishing. Each regeneration creates a new version record; the previous version is archived (not deleted). |
 | PAY-019 | Admin must **review and explicitly publish** the Society-Level Annual Audit Report before owners can access it. An unpublished draft is only visible to Admins and Accountants. |
-| PAY-020 | All generated audit PDF files must be stored in **AWS S3** under the path `audit-reports/{societyId}/{financialYear}/{reportType}/{version}.pdf` and must be retained for a minimum of **7 years** (S3 Lifecycle policy: transition to Glacier after 1 year). |
+| PAY-020 | All generated audit PDF files must be stored in **object storage (S3-compatible)** under the path `audit-reports/{societyId}/{financialYear}/{reportType}/{version}.pdf` and must be retained for a minimum of **7 years**. |
 | PAY-021 | Owner-Level Annual Statement PDFs are generated synchronously for financial years with ≤ 12 transactions and asynchronously (BullMQ job) for larger datasets; the client polls for completion. |
-| PAY-022 | Download links for all audit PDFs must be **pre-signed S3 URLs** with a maximum 1-hour expiry. Direct public S3 access to the bucket must be blocked. |
+| PAY-022 | Download links for all audit PDFs must be **pre-signed download URLs** with a maximum 1-hour expiry. Direct public access to the storage bucket must be blocked. |
 | PAY-023 | The Society-Level Annual Audit Report PDF must be accessible to: Admins (draft + published), Accountants (draft + published), and Owners (published only). Super Admins can access reports for all societies. |
 
 ### 5.6 Society Bank Account Management
@@ -318,7 +317,7 @@ All monetary movements are classified into two directions:
 | Requirement ID | Description |
 |---|---|
 | PAY-024 | The system must allow Society Admins to add one or more bank accounts for their society. Only users with the `ADMIN` or `SUPER_ADMIN` role may create or modify bank account records. Owners and Staff have no access. |
-| PAY-025 | The bank account number must be stored **AES-256-GCM encrypted** (same `PhoneCryptoService` pattern) using the society-specific KMS DEK. The field must never appear in plaintext in any API response; the UI must display only the last 4 digits (masked as `••••••••1234`). |
+| PAY-025 | The bank account number must be stored **AES-256-GCM encrypted** (same `PhoneCryptoService` pattern) using the application DEK. The field must never appear in plaintext in any API response; the UI must display only the last 4 digits (masked as `••••••••1234`). |
 | PAY-026 | The IFSC code must be validated against the **Razorpay IFSC validation API** (`GET /v1/ifsc/{ifsc}`) before saving. Invalid or inactive IFSCs must be rejected with a `400` error. |
 | PAY-027 | On successful bank account creation, the system must call the **Razorpay Contact API** (`POST /v1/contacts`) to create a Razorpay Contact for the society (if one does not already exist), then call the **Razorpay Fund Account API** (`POST /v1/fund_accounts`) to register the bank account under that contact. The Razorpay `fund_account_id` and `contact_id` must be stored in the `society_bank_accounts` table. |
 | PAY-028 | After registration, the system must trigger a **Razorpay Fund Account Validation** (`POST /v1/fund_accounts/validations`) — specifically the **Reverse Penny Drop** flow — to verify the account is live and belongs to the society. The account status must remain `PENDING_VERIFICATION` until the validation webhook (`fund_account.validation.completed`) confirms success. |
@@ -336,17 +335,17 @@ All monetary movements are classified into two directions:
 |---|---|
 | RENT-001 | Flat owners may register a tenancy by providing tenant details: full name, phone number, email (optional), date of birth (optional), permanent address, and emergency contact. Only the authenticated flat owner (or an Admin) may create or modify a tenancy for a given flat. |
 | RENT-002 | The tenant's **phone number** must follow the same dual-column encryption strategy as owner phone numbers: `tenantPhoneHash` (HMAC-SHA256, deterministic, for lookup) + `tenantPhoneEncrypted` (AES-256-GCM, reversible). The plaintext phone must never appear in any API response to non-admin callers. |
-| RENT-003 | The tenant's **PAN number** must be stored **AES-256-GCM encrypted** using the society-specific KMS DEK. Only the last 4 characters may be stored unencrypted (`panLast4`) for masked display (e.g. `••••••••P123`). The full PAN must never be returned in any API response; admin-level decryption requires an explicit privileged endpoint with audit logging. |
+| RENT-003 | The tenant's **PAN number** must be stored **AES-256-GCM encrypted** using the application DEK. Only the last 4 characters may be stored unencrypted (`panLast4`) for masked display (e.g. `••••••••P123`). The full PAN must never be returned in any API response; admin-level decryption requires an explicit privileged endpoint with audit logging. |
 | RENT-004 | A flat may have **at most one active tenancy** at any time (status `ACTIVE`). Attempting to create a second active tenancy on the same flat must return `409 Conflict`. |
 
 #### 5.7.2 Document Upload & Storage
 
 | Requirement ID | Description |
 |---|---|
-| RENT-005 | Owners may upload up to **two document types** per tenancy: (1) **Rent Agreement** (PDF/image, max 10 MB) and (2) **Tenant PAN Card copy** (PDF/image, max 5 MB). Both are stored in a dedicated **private S3 bucket** (`society-rental-documents`) using **server-side KMS encryption** (`aws:kms`) with the society-specific key. |
-| RENT-006 | Documents must be uploaded via **pre-signed S3 PUT URLs** (max 15-minute expiry) issued by the `owner-service`. The service generates the PUT URL, the client uploads directly to S3, and then calls a confirmation endpoint to record the S3 key and metadata in the database. Direct S3 `GetObject` access is blocked; downloads are served exclusively via pre-signed GET URLs (max 1-hour expiry). |
-| RENT-007 | Each document upload creates a new version record in the `rental_documents` table. Previous versions are **never deleted** from S3; they are flagged `SUPERSEDED` in the database. This preserves a full audit trail of agreement renewals. |
-| RENT-008 | The S3 key convention for rental documents must be: `rental-documents/{societyId}/{flatId}/{rentalId}/{documentType}/{version}_{filename}` where `documentType` is `RENT_AGREEMENT` or `PAN_CARD`. |
+| RENT-005 | Owners may upload up to **two document types** per tenancy: (1) **Rent Agreement** (PDF/image, max 10 MB) and (2) **Tenant PAN Card copy** (PDF/image, max 5 MB). Both are stored in a dedicated **private storage bucket** (`society-rental-documents`) with server-side encryption. |
+| RENT-006 | Documents must be uploaded via **pre-signed upload URLs** (max 15-minute expiry) issued by the `owner-service`. The service generates the upload URL, the client uploads directly to object storage, and then calls a confirmation endpoint to record the object key and metadata in the database. Direct bucket access is blocked; downloads are served exclusively via pre-signed download URLs (max 1-hour expiry). |
+| RENT-007 | Each document upload creates a new version record in the `rental_documents` table. Previous versions are **never deleted** from object storage; they are flagged `SUPERSEDED` in the database. This preserves a full audit trail of agreement renewals. |
+| RENT-008 | The object key convention for rental documents must be: `rental-documents/{societyId}/{flatId}/{rentalId}/{documentType}/{version}_{filename}` where `documentType` is `RENT_AGREEMENT` or `PAN_CARD`. |
 
 #### 5.7.3 Rental Lifecycle & Admin Visibility
 
@@ -364,7 +363,7 @@ All monetary movements are classified into two directions:
 | Requirement ID | Description |
 |---|---|
 | FAC-001 | Only users with the `ADMIN` or `SUPER_ADMIN` role may create, edit, or deactivate a `CommonFacility`. A facility belongs to exactly one society (`societyId`) and is not visible to owners of other societies. |
-| FAC-002 | A `CommonFacility` record must capture: `name` (e.g. "Clubhouse", "Swimming Pool"), `description` (rich text), `capacity` (max occupants, integer), `location` (text, e.g. "Block A Ground Floor"), `status` (`ACTIVE` \| `INACTIVE` \| `UNDER_MAINTENANCE`), and up to **10 photos** stored in S3 (`society-facility-photos` bucket, KMS encrypted). |
+| FAC-002 | A `CommonFacility` record must capture: `name` (e.g. "Clubhouse", "Swimming Pool"), `description` (rich text), `capacity` (max occupants, integer), `location` (text, e.g. "Block A Ground Floor"), `status` (`ACTIVE` \| `INACTIVE` \| `UNDER_MAINTENANCE`), and up to **10 photos** stored in object storage (`society-facility-photos` bucket). |
 | FAC-003 | Each facility supports exactly **one pricing model**, configured at creation and editable by Admin: (a) **Fixed** — a single flat fee regardless of duration; (b) **Hourly** — fee = `ratePerHour × durationHours`; (c) **Variable** — a JSON price schedule keyed by `{ dayType: WEEKDAY \| WEEKEND, slotType: MORNING \| AFTERNOON \| EVENING \| FULL_DAY }`, each mapping to an amount in paise. All amounts stored in **paise** (₹1 = 100 paise). |
 | FAC-004 | Admins may define **blackout periods** per facility (e.g. annual maintenance, society AGM). A blackout period has a `startDatetime` and `endDatetime`; any booking slot that overlaps a blackout period must be rejected with `409 Conflict`. Blackout periods are shown as unavailable (greyed-out) on the owner-facing availability calendar. |
 | FAC-005 | Each facility has a configurable **advance booking window**: owners may not book a slot more than `maxAdvanceDays` days in the future (default 60), and not less than `minAdvanceHours` hours before the slot start (default 24). Requests outside this window must be rejected with `400 Bad Request`. |
@@ -386,7 +385,7 @@ All monetary movements are classified into two directions:
 
 | Requirement ID | Description |
 |---|---|
-| FAC-014 | The owner-facing facility list must show, for each facility: name, description, capacity, photos (pre-signed S3 GET URLs, 1-hour expiry), pricing summary (e.g. "₹2,000 fixed" or "From ₹500/hr"), and an availability calendar for the next `maxAdvanceDays` days. Dates fully booked or blacked out must be marked unavailable. |
+| FAC-014 | The owner-facing facility list must show, for each facility: name, description, capacity, photos (pre-signed download URLs, 1-hour expiry), pricing summary (e.g. "₹2,000 fixed" or "From ₹500/hr"), and an availability calendar for the next `maxAdvanceDays` days. Dates fully booked or blacked out must be marked unavailable. |
 | FAC-015 | Owners may view **only their own bookings**. Admins may view all bookings across the society, filterable by facility, date range, status, and owner. Super Admins may view cross-society. |
 | FAC-016 | All admin actions on facilities (create, edit, blackout, approve booking, reject, cancel, modify pricing) must be written to the `AdminAuditLog` entity (Section 16.8) with `entityType = FACILITY` or `FACILITY_BOOKING`. |
 
@@ -399,8 +398,8 @@ All monetary movements are classified into two directions:
 | VND-001 | Only `ADMIN` or `SUPER_ADMIN` users may create, edit, or change the status of a `VendorProfile`. A vendor belongs to a single society (`societyId`). |
 | VND-002 | A `VendorProfile` must capture: `businessName`, `ownerName`, `serviceCategory` (enum — see VND-003), `phone` (AES-256-GCM encrypted; `phoneHash` HMAC-SHA256 for lookup), `email` (optional, plaintext), `address` (plaintext), `description` (optional, rich text), `status` (`ACTIVE` \| `INACTIVE`), and `empanelledAt` (date). |
 | VND-003 | `serviceCategory` must be an extensible enum stored as a `varchar` column, seeded with standard categories: `PLUMBER`, `ELECTRICIAN`, `CARPENTER`, `PAINTER`, `PEST_CONTROL`, `HOUSEKEEPING`, `SECURITY`, `LANDSCAPING`, `LIFT_AMC`, `GENERATOR_AMC`, `INTERNET_PROVIDER`, `OTHER`. New categories may be added by Super Admins without a schema migration (enum values not used as PostgreSQL `ENUM` type; stored as unconstrained `varchar` with application-level validation). |
-| VND-004 | Admins may upload up to **5 supporting documents** per vendor (e.g. GST Certificate, Trade Licence, ID Proof, Insurance Certificate). Documents are stored in the `society-vendor-documents` private S3 bucket with AES-256-GCM KMS encryption. Key convention: `vendor-documents/{societyId}/{vendorId}/{documentType}/v{n}_{filename}`. |
-| VND-005 | Vendor documents are served exclusively via **pre-signed S3 GET URLs** (1-hour expiry). Admin-only: Owners cannot access vendor documents. |
+| VND-004 | Admins may upload up to **5 supporting documents** per vendor (e.g. GST Certificate, Trade Licence, ID Proof, Insurance Certificate). Documents are stored in the `society-vendor-documents` private storage bucket with AES-256-GCM server-side encryption. Object key convention: `vendor-documents/{societyId}/{vendorId}/{documentType}/v{n}_{filename}`. |
+| VND-005 | Vendor documents are served exclusively via **pre-signed download URLs** (1-hour expiry). Admin-only: Owners cannot access vendor documents. |
 
 #### 5.9.2 Vendor Lifecycle & Owner-Facing Directory
 
@@ -444,8 +443,8 @@ All monetary movements are classified into two directions:
 |---|---|
 | MED-001 | The **event organiser** and society **Admins** may upload media to an event. Other owners may not upload media. Media upload is allowed while the event is in `UPCOMING`, `ONGOING`, or `COMPLETED` status (within the 7-day post-completion window per EVT-007). |
 | MED-002 | **Supported media types and limits per event:** Photos (JPEG, PNG, WEBP) — max individual file size **20 MB**, max **50 photos** per event. Videos (MP4, MOV) — max individual file size **500 MB**, max **5 videos** per event. Exceeding either limit returns `422 Unprocessable Entity`. |
-| MED-003 | Media is stored in the **`society-event-media`** private S3 bucket with **server-side KMS encryption** (`aws:kms`). S3 key convention: `event-media/{societyId}/{eventId}/{mediaType}/{mediaId}_{originalFilename}`. Direct public S3 access is blocked; all downloads served via pre-signed GET URLs (1-hour expiry). |
-| MED-004 | The upload flow follows the same pre-signed PUT pattern used for rental documents: (1) caller requests a pre-signed PUT URL; (2) client uploads directly to S3; (3) caller calls a confirm endpoint; (4) system creates an `EventMedia` record. |
+| MED-003 | Media is stored in the **`society-event-media`** private storage bucket with server-side encryption. Object key convention: `event-media/{societyId}/{eventId}/{mediaType}/{mediaId}_{originalFilename}`. Direct public access is blocked; all downloads served via pre-signed download URLs (1-hour expiry). |
+| MED-004 | The upload flow follows the same pre-signed PUT pattern used for rental documents: (1) caller requests a pre-signed PUT URL; (2) client uploads directly to object storage; (3) caller calls a confirm endpoint; (4) system creates an `EventMedia` record. |
 | MED-005 | **Thumbnail generation:** On confirmation of a photo upload, the system enqueues a BullMQ job that uses **Sharp** (Node.js image processing) to produce a 480×480-px WebP thumbnail stored at `event-media/{societyId}/{eventId}/thumbnails/{mediaId}_thumb.webp`. On video confirmation, a thumbnail frame is extracted using **FFmpeg** at the 1-second mark and stored at `event-media/{societyId}/{eventId}/thumbnails/{mediaId}_thumb.jpg`. Thumbnails are used in feed cards and gallery grids. |
 
 #### 5.11.2 Viewing & Moderation
@@ -453,24 +452,24 @@ All monetary movements are classified into two directions:
 | Requirement ID | Description |
 |---|---|
 | MED-006 | Any authenticated owner within the same society may view event media (photos and videos). Media is **never publicly accessible**; all gallery requests return a list of media metadata and thumbnail pre-signed URLs (1-hour expiry); full-resolution download requires a separate call to the download-url endpoint. |
-| MED-007 | **Admin moderation:** Admins may remove any individual `EventMedia` item (status → `REMOVED`). Removed items are hidden from all gallery views but retained in S3 and the database for audit. The organiser receives a push notification when their media item is removed. |
-| MED-008 | **Soft-delete by organiser:** The event organiser may delete their own uploaded media items at any time while the event is not `COMPLETED`. Soft-deleted items set `deletedAt` and are hidden from galleries. The S3 object is **not** immediately deleted; a lifecycle rule transitions it to S3 Glacier after 90 days and expires it after 3 years. |
+| MED-007 | **Admin moderation:** Admins may remove any individual `EventMedia` item (status → `REMOVED`). Removed items are hidden from all gallery views but retained in object storage and the database for audit. The organiser receives a push notification when their media item is removed. |
+| MED-008 | **Soft-delete by organiser:** The event organiser may delete their own uploaded media items at any time while the event is not `COMPLETED`. Soft-deleted items set `deletedAt` and are hidden from galleries. The stored object is **not** immediately deleted; it is purged after 90 days by a scheduled cleanup job. |
 
 ### 5.12 Common Image Media Service
 
-The **Common Image Media Service** (`media-service`) is a dedicated microservice that acts as the single platform-wide entry point for all image uploads and deliveries. Every image displayed in the system — facility photos, event banners, event gallery media, announcement thumbnails, vendor logos, and society logos — must be routed through this service. The service assigns a globally unique **Image ID**, stores the original in S3, and serves transformed variants on demand via query parameters, caching each variant at the CDN edge.
+The **Common Image Media Service** (`media-service`) is a dedicated microservice that acts as the single platform-wide entry point for all image uploads and deliveries. Every image displayed in the system — facility photos, event banners, event gallery media, announcement thumbnails, vendor logos, and society logos — must be routed through this service. The service assigns a globally unique **Image ID**, stores the original in object storage, and serves transformed variants on demand via query parameters, caching each variant in object storage.
 
-> **Scope — Photos only (v1):** The media-service handles **images** (JPEG, PNG, WEBP, GIF) in v1. Videos continue to be handled by module-specific pre-signed S3 flows (see Section 5.11).
+> **Scope — Photos only (v1):** The media-service handles **images** (JPEG, PNG, WEBP, GIF) in v1. Videos continue to be handled by module-specific pre-signed upload flows (see Section 5.11).
 
 #### 5.12.1 Upload & Unique ID Generation
 
 | Requirement ID | Description |
 |---|---|
-| IMG-001 | Every image upload must produce a **globally unique Image ID** — a `UUIDv4` string (e.g. `3f2a8c1d-e7b4-4f9a-b2d6-1a0c5e8f3b7d`). The Image ID is the stable public identifier for the asset; clients reference it in all transform URLs. The underlying S3 key and bucket must never be exposed to clients. |
-| IMG-002 | The upload flow is a **two-step pre-signed PUT**: (1) caller requests an upload URL from `media-service` (providing `mimeType`, `fileSizeBytes`, `context` — see IMG-003); (2) client uploads directly to S3 using the pre-signed PUT URL; (3) caller calls a confirm endpoint; (4) `media-service` fetches image metadata (dimensions, format) from S3 using **Sharp** and creates a `MediaAsset` record. The `imageId` is returned in both step (1) and step (3) responses. |
-| IMG-003 | The upload request must include a **context tag** (`contextType`: `FACILITY_PHOTO`, `EVENT_BANNER`, `EVENT_GALLERY`, `ANNOUNCEMENT`, `VENDOR_LOGO`, `SOCIETY_LOGO`, `PROFILE_AVATAR`) and optional `contextId` (e.g. `facilityId`, `eventId`). These are stored on the `MediaAsset` for filtering and audit; they do not affect the S3 key or transform pipeline. |
+| IMG-001 | Every image upload must produce a **globally unique Image ID** — a `UUIDv4` string (e.g. `3f2a8c1d-e7b4-4f9a-b2d6-1a0c5e8f3b7d`). The Image ID is the stable public identifier for the asset; clients reference it in all transform URLs. The underlying object storage key and bucket must never be exposed to clients. |
+| IMG-002 | The upload flow is a **two-step pre-signed upload**: (1) caller requests an upload URL from `media-service` (providing `mimeType`, `fileSizeBytes`, `context` — see IMG-003); (2) client uploads directly to object storage using the pre-signed upload URL; (3) caller calls a confirm endpoint; (4) `media-service` fetches image metadata (dimensions, format) from object storage using **Sharp** and creates a `MediaAsset` record. The `imageId` is returned in both step (1) and step (3) responses. |
+| IMG-003 | The upload request must include a **context tag** (`contextType`: `FACILITY_PHOTO`, `EVENT_BANNER`, `EVENT_GALLERY`, `ANNOUNCEMENT`, `VENDOR_LOGO`, `SOCIETY_LOGO`, `PROFILE_AVATAR`) and optional `contextId` (e.g. `facilityId`, `eventId`). These are stored on the `MediaAsset` for filtering and audit; they do not affect the object key or transform pipeline. |
 | IMG-004 | Accepted image formats: **JPEG, PNG, WEBP, GIF** (static only; animated GIF decoded to first frame). Maximum upload file size: **20 MB** for all context types except `SOCIETY_LOGO` and `PROFILE_AVATAR` (max 5 MB). Requests exceeding size limits must be rejected with `413 Payload Too Large` before a pre-signed URL is issued. |
-| IMG-005 | Original images are stored in the **`society-media-assets`** private S3 bucket under the key `originals/{societyId}/{contextType}/{imageId}.{ext}`. Server-side KMS encryption (`aws:kms`) is applied. The bucket has **no public access**; all client delivery goes through CloudFront. |
+| IMG-005 | Original images are stored in the **`society-media-assets`** private storage bucket under the key `originals/{societyId}/{contextType}/{imageId}.{ext}`. Server-side encryption is applied. The bucket has **no public access**; all client delivery uses pre-signed URLs generated by `media-service`. |
 
 #### 5.12.2 On-Demand Image Transformation Parameters
 
@@ -488,10 +487,9 @@ The **Common Image Media Service** (`media-service`) is a dedicated microservice
 
 | Requirement ID | Description |
 |---|---|
-| IMG-013 | Each unique combination of `(imageId, width, height, quality, format, crop, blur)` constitutes a **variant**. Variants are stored in S3 under `variants/{societyId}/{contextType}/{imageId}/{params_hash}.{format}` where `params_hash` is the SHA-256 of the canonical sorted query string. On the first request for a variant, the `media-service` fetches the original from S3, applies the Sharp transform, stores the variant back to S3, and streams the result to the client. Subsequent requests for the same variant are served directly from S3 / CloudFront cache. |
-| IMG-014 | **AWS CloudFront** sits in front of the `society-media-assets` S3 bucket. All image delivery (`GET /media/images/:imageId`) is routed through CloudFront. The cache key is the full request URL including query parameters. CloudFront TTL: **7 days** for variant objects; originals are **never** served through CloudFront (they are only accessed internally by `media-service`). |
-| IMG-015 | **Cache-Control headers** returned by the transform endpoint: `Cache-Control: public, max-age=604800, stale-while-revalidate=86400` (7-day browser/CDN cache, 1-day stale-while-revalidate). Images are **immutable once generated** — the same `imageId` + params always yield the same output; therefore `immutable` may be appended to the header for versioned variants. |
-| IMG-016 | **Soft-delete and purge:** When a `MediaAsset` is deleted (soft-delete via `deletedAt`), all CloudFront cached paths for that `imageId` must be **invalidated** via the CloudFront Invalidations API (`/media/images/{imageId}*`). S3 originals are retained for 30 days after `deletedAt`, then permanently deleted by an S3 lifecycle rule. Variants are retained for 7 days before lifecycle expiry. |
+| IMG-013 | Each unique combination of `(imageId, width, height, quality, format, crop, blur)` constitutes a **variant**. Variants are stored in object storage under `variants/{societyId}/{contextType}/{imageId}/{params_hash}.{format}` where `params_hash` is the SHA-256 of the canonical sorted query string. On the first request for a variant, the `media-service` fetches the original from object storage, applies the Sharp transform, stores the variant back to object storage, and streams the result to the client. Subsequent requests for the same variant are served directly from the cached variant object. |
+| IMG-015 | **Cache-Control headers** returned by the transform endpoint: `Cache-Control: public, max-age=604800, stale-while-revalidate=86400` (7-day browser cache, 1-day stale-while-revalidate). Images are **immutable once generated** — the same `imageId` + params always yield the same output; therefore `immutable` may be appended to the header for versioned variants. |
+| IMG-016 | **Soft-delete and purge:** When a `MediaAsset` is deleted (soft-delete via `deletedAt`), the variant registry (`variants` JSONB) is cleared and a BullMQ job schedules physical deletion from object storage. Originals are retained for 30 days after `deletedAt`, then permanently deleted by a scheduled cleanup job. Variants are retained for 7 days before expiry. |
 
 ### 5.4 Announcements & Notifications
 
@@ -524,8 +522,7 @@ The **Common Image Media Service** (`media-service`) is a dedicated microservice
 
 ### 6.3 Scalability
 
-- Horizontal pod autoscaling (HPA) on all NestJS services triggered at 70% CPU/memory.
-- PostgreSQL read replicas for analytics and report queries.
+- Services are packaged as Docker containers and can be scaled horizontally by running multiple replicas behind a load balancer.
 - Multi-tenant data isolation via `society_id` column-level tenant discriminator (not schema-per-tenant, for cost efficiency at scale).
 
 ### 6.4 Accessibility
@@ -576,7 +573,7 @@ The phone number is the **primary user identifier** across all services. It must
 
 - **`phone_hash`**: `HMAC-SHA256(normalised_phone, HMAC_SECRET)` — deterministic, allows `WHERE phone_hash = ?` queries. The raw phone is never recoverable from this column alone (one-way with secret).
 - **`phone_encrypted`**: `AES-256-GCM(normalised_phone, DEK, random_IV)` — reversible for display and GDPR export. IV stored prepended to ciphertext.
-- Both keys (`HMAC_SECRET`, `DEK`) are stored in **AWS KMS / HashiCorp Vault**, never in application config or source code.
+- Both keys (`HMAC_SECRET`, `DEK`) are injected via **environment variables** and must never be committed to source control.
 
 #### 7.1.3 Phone Number Normalisation
 
@@ -587,7 +584,7 @@ All phone numbers are normalised to **E.164 format** (`+[country code][number]`)
 1. Super Admin triggers rotation job via `super-admin-service`.
 2. Job fetches all `phone_encrypted` rows in batches of 1,000.
 3. Each batch: decrypt with old DEK → re-encrypt with new DEK → update row.
-4. Old DEK retired in KMS after 100% of rows migrated.
+4. Old DEK retired after 100% of rows migrated; `DEK` environment variable updated on next deploy.
 5. `HMAC_SECRET` rotation requires re-computing all `phone_hash` values — scheduled during low-traffic window.
 
 ### 7.2 Core TypeORM Entities
@@ -767,7 +764,7 @@ export class Flat {
 
 #### 7.2.3b TenantProfile Entity
 
-Stores the personal details of a tenant. Phone and PAN are encrypted using the same society-specific KMS DEK as owner phone numbers. A `TenantProfile` record is shared across multiple rentals if the same person rents multiple times (identified by `tenantPhoneHash`).
+Stores the personal details of a tenant. Phone and PAN are encrypted using the same application DEK as owner phone numbers. A `TenantProfile` record is shared across multiple rentals if the same person rents multiple times (identified by `tenantPhoneHash`).
 
 ```typescript
 @Entity('tenant_profiles')
@@ -949,7 +946,7 @@ export class RentalDocument {
   @Column({ type: 'enum', enum: RentalDocumentType })
   documentType: RentalDocumentType;
 
-  // ── S3 storage ────────────────────────────────────────────────────────────
+  // ── Object storage ────────────────────────────────────────────────────────
   @Column({ type: 'text' })
   s3Key: string;                    // e.g. "rental-documents/{societyId}/{flatId}/{rentalId}/RENT_AGREEMENT/v2_agreement.pdf"
 
@@ -1036,7 +1033,7 @@ export class VisitorLog {
   preApprovedTokenHash: string; // hashed; raw token never stored
 
   @Column({ type: 'varchar', length: 512, nullable: true })
-  photoUrl: string; // S3 presigned URL; null if consent denied
+  photoUrl: string; // Pre-signed download URL; null if consent denied
 
   @Column({ type: 'boolean', default: false })
   gdprConsent: boolean;
@@ -1161,7 +1158,7 @@ export class Payment {
 
 #### 7.2.7 AuditReport Entity
 
-Stores the metadata for every generated financial year audit PDF. The actual PDF binary lives in S3; this table is the audit trail for all report versions.
+Stores the metadata for every generated financial year audit PDF. The actual PDF binary lives in object storage; this table is the audit trail for all report versions.
 
 ```typescript
 @Entity('audit_reports')
@@ -1201,7 +1198,7 @@ export class AuditReport {
   @Column({ type: 'uuid', nullable: true })
   ownerId: string;
 
-  /** S3 object key: audit-reports/{societyId}/{financialYear}/{reportType}/{version}.pdf */
+  /** Object storage key: audit-reports/{societyId}/{financialYear}/{reportType}/{version}.pdf */
   @Column({ type: 'varchar', length: 512, nullable: true })
   s3Key: string;
 
@@ -1923,7 +1920,7 @@ export class EventMedia {
   @Column({ type: 'enum', enum: MediaType })
   mediaType: MediaType;             // PHOTO | VIDEO
 
-  // ── S3 storage ────────────────────────────────────────────────────────────
+  // ── Object storage ────────────────────────────────────────────────────────
   @Column({ type: 'text' })
   s3Key: string;                    // event-media/{societyId}/{eventId}/{mediaType}/{id}_{filename}
 
@@ -1987,7 +1984,7 @@ export enum MediaAssetContextType {
 
 export enum MediaAssetStatus {
   ACTIVE  = 'ACTIVE',
-  DELETED = 'DELETED',   // Soft-delete; CloudFront invalidation triggered
+  DELETED = 'DELETED',   // Soft-delete; variant registry cleared, storage purge queued
 }
 
 @Entity('media_assets')
@@ -2054,7 +2051,7 @@ export class MediaAsset {
   status: MediaAssetStatus;
 
   @Column({ type: 'timestamptz', nullable: true })
-  deletedAt: Date;                   // Soft-delete; triggers CloudFront invalidation
+  deletedAt: Date;                   // Soft-delete; triggers variant cleanup + storage purge job
 
   // ── Audit ──────────────────────────────────────────────────────────────
   @Column({ type: 'uuid' })
@@ -2374,12 +2371,12 @@ Rental endpoints live in `owner-service`. Access is gated by ownership check (`f
 |---|---|---|---|
 | `POST` | `/flats/:flatId/rentals` | Owner (own flat) / Admin | Create new tenancy; encrypts phone + PAN; updates flat status to `RENTED`; notifies Admin |
 | `GET` | `/flats/:flatId/rentals` | Owner (own flat) / Admin | List all tenancies for a flat (current + historical); phone/PAN masked for Owner callers |
-| `GET` | `/rentals/:id` | Owner (own flat) / Admin | Get single tenancy details; includes document metadata (no S3 URL yet) |
+| `GET` | `/rentals/:id` | Owner (own flat) / Admin | Get single tenancy details; includes document metadata (no download URL yet) |
 | `PATCH` | `/rentals/:id` | Owner (own flat) / Admin | Update tenancy fields (dates, rent amount, tenant details); triggers re-encryption if phone/PAN changed |
 | `PATCH` | `/rentals/:id/end` | Owner (own flat) / Admin | End active tenancy; flat → `VACANT`; tenant profile scheduled for GDPR anonymisation |
-| `POST` | `/rentals/:id/documents/upload-url` | Owner (own flat) / Admin | Request pre-signed S3 PUT URL for a document (type: `RENT_AGREEMENT` \| `PAN_CARD`); returns `{ uploadUrl, s3Key, expiresIn: 900 }` |
-| `POST` | `/rentals/:id/documents/confirm` | Owner (own flat) / Admin | Confirm successful S3 upload; creates `RentalDocument` record; supersedes previous version |
-| `GET` | `/rentals/:id/documents/:docId/download-url` | Owner (own flat) / Admin | Issue pre-signed S3 GET URL (1-hour expiry) for a specific document version |
+| `POST` | `/rentals/:id/documents/upload-url` | Owner (own flat) / Admin | Request pre-signed upload URL for a document (type: `RENT_AGREEMENT` \| `PAN_CARD`); returns `{ uploadUrl, objectKey, expiresIn: 900 }` |
+| `POST` | `/rentals/:id/documents/confirm` | Owner (own flat) / Admin | Confirm successful upload; creates `RentalDocument` record; supersedes previous version |
+| `GET` | `/rentals/:id/documents/:docId/download-url` | Owner (own flat) / Admin | Issue pre-signed download URL (1-hour expiry) for a specific document version |
 | `GET` | `/rentals/:id/documents` | Owner (own flat) / Admin | List all document versions with metadata (no download URLs; call `/download-url` separately) |
 
 #### Request / Response: `POST /flats/:flatId/rentals`
@@ -2435,12 +2432,12 @@ POST /rentals/:id/documents/upload-url
        ▼
 owner-service:
   1. Validates rental ownership
-  2. Generates s3Key = rental-documents/{societyId}/{flatId}/{rentalId}/RENT_AGREEMENT/v{n+1}_agreement.pdf
-  3. Calls S3 createPresignedPost() → uploadUrl (15-min expiry)
-  Returns: { uploadUrl, fields, s3Key, expiresIn: 900 }
+  2. Generates objectKey = rental-documents/{societyId}/{flatId}/{rentalId}/RENT_AGREEMENT/v{n+1}_agreement.pdf
+  3. Calls createPresignedPost() → uploadUrl (15-min expiry)
+  Returns: { uploadUrl, fields, objectKey, expiresIn: 900 }
        │
        ▼
-Client uploads file directly to S3 via HTTP PUT to uploadUrl
+Client uploads file directly to object storage via HTTP PUT to uploadUrl
        │
        ▼
 POST /rentals/:id/documents/confirm
@@ -2463,15 +2460,15 @@ Facility management routes are split between two services:
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/admin/facilities` | Admin | Create a new facility; store photos to S3; set pricing model |
+| `POST` | `/admin/facilities` | Admin | Create a new facility; store photos in object storage; set pricing model |
 | `GET` | `/admin/facilities` | Admin | List all facilities for the society (all statuses) |
 | `GET` | `/admin/facilities/:id` | Admin | Get full facility details including blackouts |
 | `PATCH` | `/admin/facilities/:id` | Admin | Update facility details, pricing, or advance booking window |
 | `PATCH` | `/admin/facilities/:id/status` | Admin | Set status to `ACTIVE`, `INACTIVE`, or `UNDER_MAINTENANCE` |
 | `POST` | `/admin/facilities/:id/blackouts` | Admin | Add a blackout period |
 | `DELETE` | `/admin/facilities/:id/blackouts/:blackoutId` | Admin | Remove a blackout period |
-| `POST` | `/admin/facilities/:id/photos/upload-url` | Admin | Pre-signed S3 PUT URL for a facility photo |
-| `POST` | `/admin/facilities/:id/photos/confirm` | Admin | Confirm photo upload; appends S3 key to `photoS3Keys` |
+| `POST` | `/admin/facilities/:id/photos/upload-url` | Admin | Pre-signed upload URL for a facility photo |
+| `POST` | `/admin/facilities/:id/photos/confirm` | Admin | Confirm photo upload; appends object key to `photoObjectKeys` |
 | `GET` | `/admin/bookings` | Admin | List all facility bookings; filter by facility, date range, status |
 | `GET` | `/admin/bookings/:bookingId` | Admin | Get booking detail |
 | `PATCH` | `/admin/bookings/:bookingId/approve` | Admin | Approve booking; creates Razorpay order; notifies owner |
@@ -2526,9 +2523,9 @@ Owner submits request
 | `GET` | `/admin/vendors/:id` | Admin | Full vendor detail including document metadata |
 | `PATCH` | `/admin/vendors/:id` | Admin | Update vendor details |
 | `PATCH` | `/admin/vendors/:id/status` | Admin | Set status to `ACTIVE`, `INACTIVE`, or `DELETED` |
-| `POST` | `/admin/vendors/:id/documents/upload-url` | Admin | Pre-signed S3 PUT URL for a vendor document |
+| `POST` | `/admin/vendors/:id/documents/upload-url` | Admin | Pre-signed upload URL for a vendor document |
 | `POST` | `/admin/vendors/:id/documents/confirm` | Admin | Confirm document upload; creates `VendorDocument` record |
-| `GET` | `/admin/vendors/:id/documents/:docId/download-url` | Admin | Pre-signed S3 GET URL (1-hour expiry) |
+| `GET` | `/admin/vendors/:id/documents/:docId/download-url` | Admin | Pre-signed download URL (1-hour expiry) |
 | `GET` | `/admin/vendors/:id/phone` | Admin | Return decrypted full phone; logged in `AdminAuditLog` |
 
 #### Owner Vendor Endpoints (Directory)
@@ -2571,10 +2568,10 @@ Event routes are served by **`owner-service`** for owner-facing operations, and 
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/events/:id/media/upload-url` | Owner (own event) \| Admin | Request pre-signed S3 PUT URL; validates file type, size, and per-event count limits |
-| `POST` | `/events/:id/media/confirm` | Owner (own event) \| Admin | Confirm S3 upload; creates `EventMedia` record; enqueues thumbnail-generation BullMQ job |
+| `POST` | `/events/:id/media/upload-url` | Owner (own event) \| Admin | Request pre-signed upload URL; validates file type, size, and per-event count limits |
+| `POST` | `/events/:id/media/confirm` | Owner (own event) \| Admin | Confirm upload; creates `EventMedia` record; enqueues thumbnail-generation BullMQ job |
 | `GET` | `/events/:id/media` | Owner \| Admin | List all `ACTIVE` media items with thumbnail pre-signed URLs (1-hour expiry) |
-| `GET` | `/events/:id/media/:mediaId/download-url` | Owner \| Admin | Full-resolution pre-signed S3 GET URL (1-hour expiry) |
+| `GET` | `/events/:id/media/:mediaId/download-url` | Owner \| Admin | Full-resolution pre-signed download URL (1-hour expiry) |
 | `DELETE` | `/events/:id/media/:mediaId` | Owner (own upload) \| Admin | Organiser soft-delete or Admin removal; body `{ reason }` required for Admin |
 
 #### Event Feed & Status Lifecycle
@@ -2599,15 +2596,15 @@ Owner publishes event
 
 ### 8.3.6 Common Image Media Service (`/media`)
 
-The `media-service` is a **standalone NestJS microservice** exposed through the API Gateway at the `/media` prefix. It is the sole service authorised to read original S3 objects and write transform variants. All other services call it via internal REST for image metadata; they never access the S3 bucket directly.
+The `media-service` is a **standalone NestJS microservice** exposed through the API Gateway at the `/media` prefix. It is the sole service authorised to read original objects from object storage and write transform variants. All other services call it via internal REST for image metadata; they never access the storage bucket directly.
 
 #### Upload Endpoints
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/media/images/upload-url` | Any authenticated user | Request a pre-signed S3 PUT URL; returns `{ imageId, uploadUrl, fields, expiresIn: 900 }`; validates `mimeType` and `fileSizeBytes` before issuing URL |
+| `POST` | `/media/images/upload-url` | Any authenticated user | Request a pre-signed upload URL; returns `{ imageId, uploadUrl, fields, expiresIn: 900 }`; validates `mimeType` and `fileSizeBytes` before issuing URL |
 | `POST` | `/media/images/confirm` | Any authenticated user | Confirm upload completed; `media-service` reads image via Sharp to extract dimensions and format; creates `MediaAsset` record; returns full `MediaAssetDto` |
-| `DELETE` | `/media/images/:imageId` | Uploader (own) \| Admin | Soft-delete asset; triggers CloudFront invalidation for `imageId`; S3 objects purged after 30-day lifecycle |
+| `DELETE` | `/media/images/:imageId` | Uploader (own) \| Admin | Soft-delete asset; clears variant registry; queues BullMQ job to purge stored objects after 30 days |
 | `GET` | `/media/images/:imageId/meta` | Any authenticated user | Return asset metadata (dimensions, format, `contextType`, `contextId`, upload timestamp) without serving image bytes |
 
 #### Image Transform (Serve) Endpoint
@@ -2655,52 +2652,44 @@ GET /media/images/3f2a8c1d?width=40&height=30&blur=10&quality=30&format=webp
 GET /media/images/3f2a8c1d?size=large&format=jpeg&quality=75
 ```
 
-#### Transform & CDN Flow
+#### Transform Flow
 
 ```
 Client (Mobile / Web)
         │
         │  GET /media/images/:imageId?size=small&format=webp
         ▼
-  AWS CloudFront (CDN)
+  API Gateway → media-service
         │
-        ├──[Cache HIT]──────────────────────────────────────────► Response (≤ 10 ms)
-        │                                                          Cache-Control: public, max-age=604800
+        ├── 1. Look up MediaAsset by imageId (DB / Redis cache)
+        │       └── 404 if not found or status = DELETED
         │
-        └──[Cache MISS]
-                │
-                ▼
-        API Gateway → media-service
-                │
-                ├── 1. Look up MediaAsset by imageId (DB / Redis cache)
-                │       └── 404 if not found or status = DELETED
-                │
-                ├── 2. Compute paramsHash = SHA-256(canonical sorted query)
-                │
-                ├── 3. Check variants[paramsHash] in MediaAsset record
-                │       ├──[Variant exists in S3]──► stream from S3 → CloudFront → Client
-                │       │
-                │       └──[Variant not cached]
-                │               │
-                │               ├── 4. Fetch original from S3 (originals/…)
-                │               ├── 5. Apply Sharp transform (resize → format → quality → blur)
-                │               ├── 6. Upload variant to S3 (variants/…)
-                │               ├── 7. Update MediaAsset.variants JSONB
-                │               └── 8. Stream result → CloudFront → Client
-                │
-                └── Response headers:
-                    Content-Type: image/webp (or requested format)
-                    Cache-Control: public, max-age=604800, stale-while-revalidate=86400
-                    X-Image-Id: 3f2a8c1d-…
-                    X-Variant-Cache: HIT | MISS
+        ├── 2. Compute paramsHash = SHA-256(canonical sorted query)
+        │
+        ├── 3. Check variants[paramsHash] in MediaAsset record
+        │       ├──[Variant exists in storage]──► stream variant → Client
+        │       │
+        │       └──[Variant not cached]
+        │               │
+        │               ├── 4. Fetch original from object storage (originals/…)
+        │               ├── 5. Apply Sharp transform (resize → format → quality → blur)
+        │               ├── 6. Upload variant to object storage (variants/…)
+        │               ├── 7. Update MediaAsset.variants JSONB
+        │               └── 8. Stream result → Client
+        │
+        └── Response headers:
+            Content-Type: image/webp (or requested format)
+            Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+            X-Image-Id: 3f2a8c1d-…
+            X-Variant-Cache: HIT | MISS
 ```
 
 #### Admin Cache Endpoints
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/media/images/:imageId/invalidate` | Admin \| Super Admin | Purge all CloudFront cached paths for this image (`/media/images/{imageId}*`); also clears `variants` JSONB in DB |
-| `GET` | `/media/admin/stats` | Super Admin | Returns aggregate storage stats: total `MediaAsset` count, total original size (GB), total variant size (GB), cache hit rate (from CloudFront metrics) |
+| `POST` | `/media/images/:imageId/invalidate` | Admin \| Super Admin | Clear `variants` JSONB in DB so next request regenerates all variants; useful after re-upload |
+| `GET` | `/media/admin/stats` | Super Admin | Returns aggregate storage stats: total `MediaAsset` count, total original size (GB), total variant size (GB), variant cache hit rate (from `X-Variant-Cache` header logs) |
 
 ---
 
@@ -2720,7 +2709,7 @@ Client (Mobile / Web)
 ```
 Incoming request: POST /owner/maintenance-requests
         │
-        ├── 1. TLS termination (nginx / ALB)
+        ├── 1. TLS termination (nginx reverse proxy)
         ├── 2. Rate limit check (Redis-backed)
         ├── 3. JWT validation (RS256 public key)
         ├── 4. Role extraction from token payload
@@ -2737,7 +2726,7 @@ Incoming request: POST /owner/maintenance-requests
 
 ### 8.6 Inter-Service Communication
 
-- **Synchronous:** REST over internal Kubernetes ClusterIP (or gRPC for high-frequency calls like OTP validation).
+- **Synchronous:** REST over the internal Docker network (or gRPC for high-frequency calls like OTP validation).
 - **Asynchronous:** **BullMQ** (Redis-backed) for notifications, invoice generation, email dispatch, GDPR erasure jobs, and PDF audit report generation.
 - **Event Bus:** All domain events (visitor entry, payment success, maintenance status change) published to BullMQ queues; consuming services subscribe to relevant queues.
 
@@ -2745,10 +2734,10 @@ Incoming request: POST /owner/maintenance-requests
 
 | Queue Name | Producer | Consumer | Trigger | Description |
 |---|---|---|---|---|
-| `audit-report:generate` | `admin-service` / Cron scheduler | `admin-service` (PDF worker) | On-demand or April 1 cron | Builds the Society-Level Annual Audit PDF using Puppeteer; uploads to S3; updates `audit_reports.status` |
-| `audit-report:owner-statement` | `owner-service` | `owner-service` (PDF worker) | Owner API request | Builds the Owner Annual Payment Statement PDF; uploads to S3 |
+| `audit-report:generate` | `admin-service` / Cron scheduler | `admin-service` (PDF worker) | On-demand or April 1 cron | Builds the Society-Level Annual Audit PDF using Puppeteer; uploads to object storage; updates `audit_reports.status` |
+| `audit-report:owner-statement` | `owner-service` | `owner-service` (PDF worker) | Owner API request | Builds the Owner Annual Payment Statement PDF; uploads to object storage |
 | `audit-report:notify` | `admin-service` | `admin-service` (notification worker) | On publish | Sends push + in-app notification to all society owners with a link to the published report |
-| `payment:receipt` | `api-gateway` (webhook handler) | `owner-service` | `payment.captured` webhook | Generates per-transaction receipt PDF; uploads to S3; updates `payments.receiptS3Key` |
+| `payment:receipt` | `api-gateway` (webhook handler) | `owner-service` | `payment.captured` webhook | Generates per-transaction receipt PDF; uploads to object storage; updates `payments.receiptObjectKey` |
 
 All jobs are configured with:
 - **Retry policy:** 3 attempts with exponential back-off (30 s, 2 min, 10 min).
@@ -2766,8 +2755,8 @@ All jobs are configured with:
 | Transport | TLS 1.3 enforced; HSTS headers; certificate pinning in mobile apps |
 | Authentication | Phone OTP (primary); TOTP 2FA (Super Admin); JWT RS256 |
 | Authorisation | RBAC via `RolesGuard`; society-scope enforcement at gateway |
-| Data at rest | Phone fields: AES-256-GCM; database volume: AES-256 (cloud provider) |
-| Secrets | AWS KMS / HashiCorp Vault; no secrets in source code or env files in prod |
+| Data at rest | Phone fields: AES-256-GCM; database volume: AES-256 (cloud provider disk encryption) |
+| Secrets | Environment variables only; never committed to source control; use platform secret injection in production |
 | Logging | PII fields (phone, name, address) redacted from all application logs |
 | Dependency scanning | Snyk + `npm audit` in CI pipeline |
 | SAST | SonarQube on every PR |
@@ -2865,15 +2854,13 @@ export class PhoneCryptoService {
 | **AdminJS TypeORM** | `@adminjs/typeorm` — TypeORM resource adapter | **7.x** |
 | Monorepo | Lerna + Nx (optional plugins) | Lerna 8.x |
 | Container Runtime | Docker | 25.x |
-| Orchestration | Kubernetes (EKS / GKE) | 1.30+ |
 | CI/CD | GitHub Actions | — |
-| Secret Management | AWS KMS + Parameter Store | — |
-| Object Storage | AWS S3 (photos, PDF invoices) | — |
+| Secret Management | Environment variables (`.env`; never committed) | — |
+| Object Storage | S3-compatible (AWS S3 by default; swappable with MinIO / LocalStack in dev) | — |
 | **Image Processing** | **Sharp** (Node.js libvips binding) — on-demand resize, quality, format conversion | **0.33.x** |
-| **CDN / Image Delivery** | **AWS CloudFront** — caches transformed image variants at edge; fronts the `society-media-assets` S3 bucket | — |
 | **Media Service** | Dedicated NestJS microservice (`media-service`) — handles upload, unique ID generation, on-demand transform, and variant caching for all image assets across the platform | — |
 | Push Notifications | Firebase Cloud Messaging (FCM) | — |
-| Monitoring | OpenTelemetry → Grafana / Loki / Tempo | — |
+| Monitoring | Structured JSON logs; optional OpenTelemetry exporter | — |
 
 ### 10.2 Cross-Platform App Architecture
 
@@ -3201,8 +3188,8 @@ alankapuri-my-society/                  ← git root
 │   │   │   │   ├── dto/
 │   │   │   │   │   ├── create-rental.dto.ts         ← Validates + strips PAN/phone before encrypt
 │   │   │   │   │   └── confirm-document.dto.ts
-│   │   │   │   ├── s3/
-│   │   │   │   │   └── rental-s3.service.ts         ← Pre-signed PUT/GET URL generation
+│   │   │   │   ├── storage/
+│   │   │   │   │   └── rental-storage.service.ts    ← Pre-signed PUT/GET URL generation
 │   │   │   │   └── processors/
 │   │   │   │       └── gdpr-anonymise.processor.ts  ← BullMQ: anonymise tenants after 90 days
 │   │   │   ├── facilities/             ← Owner facility browsing & booking
@@ -3231,8 +3218,8 @@ alankapuri-my-society/                  ← git root
 │   │   │   │   │   ├── create-event.dto.ts
 │   │   │   │   │   ├── update-event.dto.ts
 │   │   │   │   │   └── confirm-media.dto.ts
-│   │   │   │   ├── s3/
-│   │   │   │   │   └── event-media-s3.service.ts  ← Pre-signed PUT/GET, key builder
+│   │   │   │   ├── storage/
+│   │   │   │   │   └── event-media-storage.service.ts  ← Pre-signed PUT/GET, key builder
 │   │   │   │   └── processors/
 │   │   │   │       ├── thumbnail.processor.ts     ← BullMQ: Sharp (photo) / FFmpeg (video)
 │   │   │   │       ├── event-status.processor.ts  ← BullMQ: UPCOMING→ONGOING→COMPLETED
@@ -3277,8 +3264,8 @@ alankapuri-my-society/                  ← git root
 │   │   │   │   │   ├── create-facility.dto.ts
 │   │   │   │   │   ├── update-facility.dto.ts
 │   │   │   │   │   └── approve-booking.dto.ts
-│   │   │   │   ├── s3/
-│   │   │   │   │   └── facility-s3.service.ts   ← Photo pre-signed PUT/GET URLs
+│   │   │   │   ├── storage/
+│   │   │   │   │   └── facility-storage.service.ts  ← Photo pre-signed PUT/GET URLs
 │   │   │   │   └── processors/
 │   │   │   │       └── auto-reject.processor.ts ← BullMQ: auto-reject stale PENDING bookings
 │   │   │   ├── vendors/                ← Vendor registration, document management
@@ -3290,8 +3277,8 @@ alankapuri-my-society/                  ← git root
 │   │   │   │   │   └── vendor-document.entity.ts
 │   │   │   │   ├── dto/
 │   │   │   │   │   └── create-vendor.dto.ts
-│   │   │   │   └── s3/
-│   │   │   │       └── vendor-s3.service.ts     ← Document pre-signed PUT/GET URLs
+│   │   │   │   └── storage/
+│   │   │   │       └── vendor-storage.service.ts    ← Document pre-signed PUT/GET URLs
 │   │   │   ├── events/                 ← Admin moderation, pin, official event creation
 │   │   │   │   ├── events.module.ts
 │   │   │   │   ├── events.controller.ts  ← GET all events, pin, remove, moderate media
@@ -3415,14 +3402,13 @@ alankapuri-my-society/                  ← git root
 │       │   ├── transform/              ← On-demand image transform via Sharp
 │       │   │   ├── transform.module.ts
 │       │   │   ├── transform.controller.ts  ← GET /media/images/:imageId (with query params)
-│       │   │   ├── transform.service.ts     ← Param parse → cache check → Sharp → S3 write
+│       │   │   ├── transform.service.ts     ← Param parse → cache check → Sharp → storage write
 │       │   │   ├── presets.ts               ← Named size preset definitions (thumbnail/small/…)
 │       │   │   └── params-hash.util.ts      ← SHA-256 of canonical sorted query string
 │       │   │
-│       │   ├── cache/                  ← Variant registry & CloudFront invalidation
+│       │   ├── cache/                  ← Variant registry management
 │       │   │   ├── cache.module.ts
-│       │   │   ├── cache.service.ts         ← Read/write MediaAsset.variants JSONB
-│       │   │   └── cloudfront.service.ts    ← AWS SDK CloudFront invalidation calls
+│       │   │   └── cache.service.ts         ← Read/write MediaAsset.variants JSONB
 │       │   │
 │       │   ├── entities/
 │       │   │   └── media-asset.entity.ts    ← MediaAsset TypeORM entity (7.2.17)
@@ -3433,7 +3419,7 @@ alankapuri-my-society/                  ← git root
 │       │   │   └── admin.service.ts
 │       │   │
 │       │   ├── processors/
-│       │   │   └── delete-purge.processor.ts  ← BullMQ: CloudFront invalidation on soft-delete
+│       │   │   └── delete-purge.processor.ts  ← BullMQ: storage variant + original purge on soft-delete
 │       │   │
 │       │   └── main.ts
 │       ├── Dockerfile
@@ -3767,63 +3753,62 @@ Each web app's `tailwind.config.ts` sets `content` paths covering its own `src/`
 
 ### 12.1 Infrastructure Overview
 
+For v1.0.0, all services are packaged as Docker containers and deployed on a standard VPS or managed container platform (e.g. Railway, Render, or a single cloud VM with Docker Compose). No managed Kubernetes cluster or AWS-specific infrastructure is required.
+
 ```
 Internet
    │
    ▼
-AWS Route 53 (DNS)
+DNS (any provider)
    │
    ▼
-AWS Application Load Balancer (ALB)
-   │  TLS 1.3 termination; WAF rules
-   ▼
-Kubernetes Cluster (EKS)
+Reverse Proxy — nginx (TLS 1.3 termination, rate limiting)
    │
-   ├── Namespace: api-gateway       (HPA: 2–20 pods; target 70% CPU)
-   ├── Namespace: owner-service     (HPA: 2–10 pods)
-   ├── Namespace: admin-service     (HPA: 2–10 pods)
-   ├── Namespace: super-admin-svc   (HPA: 1–3 pods)
-   ├── Namespace: redis             (ElastiCache Redis cluster)
-   └── Namespace: monitoring        (Prometheus, Grafana, Loki, Tempo)
-        │
-        ▼
-AWS RDS PostgreSQL 16
-   ├── Primary (Multi-AZ)
-   └── Read Replica ×2 (analytics / report queries)
+   ├── api-gateway        (NestJS, port 3000)
+   ├── owner-service      (NestJS TCP, internal only)
+   ├── admin-service      (NestJS TCP, internal only)
+   ├── super-admin-svc    (NestJS TCP, internal only)
+   ├── media-service      (NestJS TCP, internal only)
+   ├── redis              (BullMQ queues + session cache)
+   └── postgresql-16      (primary database)
 ```
 
-### 12.2 Kubernetes Manifests — Key Patterns
+Each service reads all secrets from environment variables injected at container start (`.env` file or platform secret store). No managed secrets service is required.
 
-Each NestJS service is deployed as a Kubernetes `Deployment` with:
+### 12.2 Container Configuration
+
+Each NestJS service ships as a multi-stage Docker image. A representative `docker-compose.yml` excerpt:
 
 ```yaml
-# Example: api-gateway deployment snippet
-spec:
-  replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0          # Zero-downtime deploys
-  template:
-    spec:
-      containers:
-        - name: api-gateway
-          image: <ECR_REPO>/api-gateway:$(IMAGE_TAG)
-          ports:
-            - containerPort: 3000
-          envFrom:
-            - secretRef:
-                name: api-gateway-secrets   # AWS Secrets Manager sync
-          livenessProbe:
-            httpGet: { path: /common/health, port: 3000 }
-            initialDelaySeconds: 10
-          readinessProbe:
-            httpGet: { path: /common/health/ready, port: 3000 }
-            initialDelaySeconds: 5
-          resources:
-            requests: { cpu: "250m", memory: "256Mi" }
-            limits:   { cpu: "1000m", memory: "512Mi" }
+services:
+  api-gateway:
+    image: society/api-gateway:${IMAGE_TAG}
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/common/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - redis
+      - postgres
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    env_file: .env
+
+volumes:
+  pg_data:
 ```
 
 ### 12.3 CI/CD Pipeline
@@ -3840,8 +3825,8 @@ PR opened / push to main|develop
 Merge to main
   │
   ├── Build Docker images (multi-stage; layer caching)
-  ├── Push to AWS ECR (tagged with git SHA)
-  ├── Helm upgrade --install (per service)
+  ├── Push to container registry (tagged with git SHA)
+  ├── Deploy updated containers to hosting environment
   └── Smoke tests (k6 script against staging)
 ```
 
@@ -3892,18 +3877,16 @@ sonar.typescript.tsconfigPaths=tsconfig.base.json
 
 | Scenario | RTO | RPO | Procedure |
 |---|---|---|---|
-| Single pod crash | < 30 s | 0 | Kubernetes self-healing |
-| AZ failure | < 5 min | < 1 min | Multi-AZ RDS failover + pod rescheduling |
-| Region failure | < 60 min | < 15 min | Cross-region RDS snapshot restore + DR cluster |
-| Data corruption | < 120 min | < 15 min | Point-in-time restore (PITR) from RDS |
-| Full ransomware | < 4 h | < 24 h | Air-gapped S3 backup restore |
+| Container crash | < 30 s | 0 | Docker `restart: unless-stopped` automatic restart |
+| Host failure | < 15 min | < 5 min | Restore from latest daily PostgreSQL dump on a new host |
+| Data corruption | < 2 h | < 24 h | Point-in-time restore from PostgreSQL WAL archive or daily dump |
+| Full data loss | < 4 h | < 24 h | Restore from offsite backup (object storage dump or equivalent) |
 
 ### 12.6 Observability
 
-- **Metrics:** OpenTelemetry SDK → Prometheus → Grafana dashboards (per-society request rate, error rate, p99 latency).
-- **Logs:** Structured JSON → Fluent Bit → AWS CloudWatch / Loki. PII fields redacted at the logger interceptor before emission.
-- **Traces:** OpenTelemetry distributed tracing → Tempo; spans carry `correlationId` and `societyId` (not `userId`).
-- **Alerts:** PagerDuty integration; critical alerts for: p99 > 500 ms, error rate > 1%, pod restarts > 3 in 5 min, RDS replication lag > 30 s.
+- **Logs:** All services emit structured JSON logs (NestJS `Logger`). PII fields (phone, name, address) are redacted at the logger interceptor before emission. Logs may be forwarded to any aggregator (Loki, Papertrail, etc.) via a sidecar or log driver.
+- **Health endpoints:** Each service exposes `/common/health` (liveness) and `/common/health/ready` (readiness) for use by the reverse proxy or any uptime monitor.
+- **Optional metrics:** The `@opentelemetry/sdk-node` exporter is included but disabled by default; set `OTEL_EXPORTER_OTLP_ENDPOINT` to enable metric and trace export to any OTLP-compatible backend.
 
 ---
 
@@ -3925,11 +3908,10 @@ sonar.typescript.tsconfigPaths=tsconfig.base.json
 | **Blackout Period** | An admin-defined date-time range during which a `CommonFacility` is unavailable for booking (e.g. annual maintenance, society events); stored in `FacilityBlackout` entity; displayed as blocked slots on the owner-facing availability calendar |
 | **BookingStatus** | Lifecycle enum for a `FacilityBooking` record: `PENDING_APPROVAL → APPROVED → CONFIRMED` (payment captured) or `REJECTED`; a `CONFIRMED` booking can transition to `CANCELLED` |
 | **Collection Efficiency** | Ratio of maintenance actually collected to total maintenance billed in a period; expressed as a percentage in the audit report's executive summary |
-| **CloudFront** | AWS Content Delivery Network (CDN) service; sits in front of the `society-media-assets` S3 bucket to cache transformed image variants at edge locations worldwide; reduces latency for image delivery, especially over mobile networks |
-| **DEK** | Data Encryption Key — the symmetric key used to encrypt phone fields; itself encrypted by the KMS master key |
+| **DEK** | Data Encryption Key — the symmetric AES-256 key used to encrypt phone and PAN fields; injected via environment variable |
 | **Design Token** | A named value (colour, spacing, radius, etc.) defined once in `shared-ui-tokens` and consumed by both Tailwind CSS (web) and NativeWind (mobile) |
 | **E.164** | International telephone number format (e.g. `+919876543210`) |
-| **EventMedia** | A photo or video uploaded to a `SocietyEvent`; stored in the `society-event-media` private S3 bucket with KMS encryption; served exclusively via pre-signed GET URLs; thumbnails auto-generated by Sharp (photos) or FFmpeg (videos) |
+| **EventMedia** | A photo or video uploaded to a `SocietyEvent`; stored in the `society-event-media` private storage bucket with server-side encryption; served exclusively via pre-signed download URLs; thumbnails auto-generated by Sharp (photos) or FFmpeg (videos) |
 | **EventRsvp** | A record confirming that a flat owner intends to attend a `SocietyEvent`; enforces `maxParticipants` cap; cancellable before `startDatetime` |
 | **EventStatus** | Lifecycle enum for a `SocietyEvent`: `DRAFT → UPCOMING → ONGOING → COMPLETED` (auto-transitioned by BullMQ jobs) or `CANCELLED` (organiser/admin) or `REMOVED` (admin moderation) |
 | **Facility** | A bookable common amenity within a society — e.g. Clubhouse, Swimming Pool, Gym, Terrace Garden; registered by an Admin as a `CommonFacility` record with capacity, pricing model, and photos |
@@ -3940,22 +3922,19 @@ sonar.typescript.tsconfigPaths=tsconfig.base.json
 | **Fund Account Validation** | A Razorpay API call (`POST /v1/fund_accounts/validations`) that verifies whether a registered fund account (bank account or VPA) is live and correctly owned; can use Standard Penny Drop or Reverse Penny Drop |
 | **GDPR** | General Data Protection Regulation — EU data privacy law |
 | **HMAC-SHA256** | Hash-based Message Authentication Code using SHA-256 — used for deterministic phone hashing and Razorpay signature verification |
-| **HPA** | Horizontal Pod Autoscaler — Kubernetes resource that scales pod replicas |
 | **IFSC** | Indian Financial System Code — an 11-character alphanumeric code that uniquely identifies a bank branch in India; used to route NEFT/RTGS/IMPS transactions |
-| **Image ID** | A globally unique `UUIDv4` string assigned by the `media-service` to every uploaded image; the only identifier exposed to client applications. All transform URLs are constructed as `/media/images/{imageId}?params`. The underlying S3 key is never shared externally |
-| **ImageVariant** | A transformed, cached copy of an original image produced by applying a specific combination of `width`, `height`, `quality`, `format`, `crop`, and `blur` parameters via Sharp; stored in S3 under `variants/…/{paramsHash}.{format}` and served from CloudFront on subsequent requests |
+| **Image ID** | A globally unique `UUIDv4` string assigned by the `media-service` to every uploaded image; the only identifier exposed to client applications. All transform URLs are constructed as `/media/images/{imageId}?params`. The underlying object storage key is never shared externally |
+| **ImageVariant** | A transformed, cached copy of an original image produced by applying a specific combination of `width`, `height`, `quality`, `format`, `crop`, and `blur` parameters via Sharp; stored in object storage under `variants/…/{paramsHash}.{format}` and streamed to the client on subsequent requests |
 | **Inflow** | Any money received into the society's account (maintenance, late fees, levies, deposits, penalties) — one of the two directions of a transaction in the audit ledger |
 | **IV** | Initialisation Vector — random value used in AES-GCM to ensure ciphertext uniqueness |
 | **Journal Entry** | An Admin-recorded offline financial event (e.g. a vendor payment or deposit refund) that is not processed through Razorpay but is logged in the platform for audit completeness |
-| **KMS** | Key Management Service — cloud service (e.g. AWS KMS) for managing cryptographic keys |
 | **Ledger** | The complete ordered record of all financial inflows and outflows for a society; forms the transaction-level appendix (Section E) of the Annual Audit Report PDF |
 | **Lerna** | JavaScript/TypeScript monorepo management tool |
 | **LQIP** | Low-Quality Image Placeholder — a tiny, heavily-blurred preview image (e.g. `width=40&blur=10&quality=30`) fetched before the full-resolution image loads; enables progressive loading on slow mobile networks |
-| **MediaAsset** | A TypeORM entity (table `media_assets`) that is the authoritative registry for every image uploaded through the `media-service`; stores the original S3 key, dimensions, MIME type, context tag, society scope, and a JSONB map of all generated `ImageVariant` objects |
+| **MediaAsset** | A TypeORM entity (table `media_assets`) that is the authoritative registry for every image uploaded through the `media-service`; stores the original object key, dimensions, MIME type, context tag, society scope, and a JSONB map of all generated `ImageVariant` objects |
 | **Multi-tenant** | Single deployment serving multiple distinct societies with data isolation |
 | **NativeWind** | Library that brings Tailwind CSS utility classes to React Native via a Babel/Metro plugin that transforms class strings into React Native `StyleSheet` objects at build time |
 | **Oat UI** | Ultra-lightweight, zero-dependency HTML/CSS/JS UI library (`@knadh/oat`, ~8 KB min+gz) that styles semantic HTML elements automatically; used in all Next.js + React web dashboards |
-| **Object Lock** | AWS S3 feature that enforces WORM (Write Once Read Many) storage; used in COMPLIANCE mode on published audit PDFs to satisfy the 7-year legal retention requirement |
 | **order_id** | Razorpay-generated identifier for a payment order; used to track the full payment lifecycle |
 | **OTP** | One-Time Password — time-limited numeric code sent via SMS/WhatsApp |
 | **Outflow** | Any money disbursed from the society's account to an owner or vendor (refunds, deposit returns, vendor payments) — recorded as a journal entry by Admin |
@@ -3972,23 +3951,22 @@ sonar.typescript.tsconfigPaths=tsconfig.base.json
 | **Reverse Penny Drop** | A Razorpay account verification method in which the end user (society admin) makes a ₹1 UPI payment from their bank account; Razorpay retrieves and verifies the account holder name, account number, IFSC, and type directly from the bank. The ₹1 is auto-refunded |
 | **Reconciliation** | The process of matching platform transaction records against Razorpay settlement statements to confirm that all captured payments and refunds are accurately reflected in the audit ledger |
 | **RSVP** | Répondez s'il vous plaît — in this system, an explicit confirmation by a flat owner that they intend to attend a `SocietyEvent`; modelled as an `EventRsvp` record; capped by `maxParticipants` |
-| **Rent Agreement** | A legally binding document signed between a flat owner and a tenant specifying rental terms; uploaded as a PDF/image to the `society-rental-documents` S3 bucket and stored with AES-256-GCM server-side KMS encryption; accessible only via pre-signed URLs |
-| **RentalDocument** | A `TypeORM` entity and S3 object representing one version of a document (Rent Agreement or PAN Card copy) attached to a `FlatRental`; previous versions are archived as `SUPERSEDED` |
+| **Rent Agreement** | A legally binding document signed between a flat owner and a tenant specifying rental terms; uploaded as a PDF/image to the `society-rental-documents` storage bucket and stored with AES-256-GCM server-side encryption; accessible only via pre-signed download URLs |
+| **RentalDocument** | A `TypeORM` entity and object storage object representing one version of a document (Rent Agreement or PAN Card copy) attached to a `FlatRental`; previous versions are archived as `SUPERSEDED` |
 | **RentalStatus** | Lifecycle enum for a `FlatRental` record: `ACTIVE` (tenant in residence) → `ENDED` (tenant vacated, flat reverted to VACANT) or `EXPIRED` (agreement end date passed without owner action) |
 | **RPO** | Recovery Point Objective — maximum acceptable data loss |
 | **RPAY_KEY_ID** | Razorpay public key sent to the client to initialise the checkout SDK |
 | **RPAY_KEY_SECRET** | Razorpay private key used server-side for order creation and signature verification — never exposed to clients |
 | **RTO** | Recovery Time Objective — maximum acceptable downtime |
-| **S3 Glacier** | AWS archival storage class used for audit PDFs older than 12 months; retrieval within minutes; significantly lower cost than S3 Standard |
 | **SHA-256** | Secure Hash Algorithm producing a 256-bit digest; used to compute the tamper-detection checksum of every generated audit PDF |
 | **Sharp** | High-performance Node.js image processing library (built on libvips); used by `media-service` to resize images, convert formats (JPEG → WebP, PNG → WebP, etc.), apply quality compression, centre-crop, and generate Gaussian blurs for LQIP placeholders — all on-demand without pre-generating variants |
 | **SocietyEvent** | A community event created by a flat owner or Admin (e.g. festival, tournament, movie night); discoverable by all owners in the same society via the event feed; may be linked to a `FacilityBooking` for a venue; supports RSVP, media uploads, and Admin pinning |
 | **Tailwind CSS** | Utility-first CSS framework; used directly in Next.js + React web dashboards and via NativeWind in React Native mobile apps |
 | **TOTP** | Time-based One-Time Password (e.g. Google Authenticator) — used for Super Admin 2FA |
 | **Tenancy** | A period during which a flat is rented out to a tenant; modelled as a `FlatRental` record linking a `Flat`, a `TenantProfile`, an owner, rental terms, and associated documents |
-| **Thumbnail** | A reduced-resolution preview image generated from an uploaded photo (480×480 px WebP via Sharp) or video (frame at 1-second mark via FFmpeg); stored in S3 alongside the original; used in event feed cards and gallery grids |
+| **Thumbnail** | A reduced-resolution preview image generated from an uploaded photo (480×480 px WebP via Sharp) or video (frame at 1-second mark via FFmpeg); stored in object storage alongside the original; used in event feed cards and gallery grids |
 | **Vendor** | A company or individual registered by the society committee as an empanelled service provider (e.g. plumber, electrician, pest-control firm); stored in `VendorProfile` with encrypted phone and optional supporting documents |
-| **VendorDocument** | A supporting document uploaded against a `VendorProfile` (GST Certificate, Trade Licence, ID Proof, Insurance Certificate); stored AES-256-GCM encrypted in the `society-vendor-documents` private S3 bucket |
+| **VendorDocument** | A supporting document uploaded against a `VendorProfile` (GST Certificate, Trade Licence, ID Proof, Insurance Certificate); stored AES-256-GCM encrypted in the `society-vendor-documents` private storage bucket |
 | **VendorPhoneRevealLog** | An audit record created each time an owner uses the "Reveal Phone" feature on a vendor listing; captures `ownerId`, `vendorId`, `ipAddress`, and `revealedAt` for security monitoring |
 | **TenantProfile** | A `TypeORM` entity capturing a tenant's personal details (name, encrypted phone, encrypted PAN, address, emergency contact); reusable across multiple `FlatRental` records for the same individual |
 | **TypeORM** | Object-Relational Mapper for TypeScript/Node.js |
@@ -3999,7 +3977,7 @@ sonar.typescript.tsconfigPaths=tsconfig.base.json
 | **WAL** | Write-Ahead Log — PostgreSQL mechanism enabling streaming replication |
 | **WebP** | A modern image format developed by Google that provides superior lossy and lossless compression compared to JPEG and PNG at equivalent visual quality; the **default output format** for all `media-service` transform responses (overridable via `format=jpeg|png|avif`) |
 | **Webhook Secret** | Separate Razorpay secret used only for HMAC-verifying incoming webhook payloads |
-| **WORM** | Write Once Read Many — a storage policy that prevents modification or deletion of objects after they are written; enforced via S3 Object Lock on published audit PDFs |
+| **WORM** | Write Once Read Many — a storage policy that prevents modification or deletion of objects after they are written; enforced at application level for published audit PDFs (`PUBLISHED` status is immutable) |
 | **XMP Metadata** | Extensible Metadata Platform — an ISO standard for embedding structured metadata (including the SHA-256 checksum) inside PDF files |
 
 ---
@@ -4024,7 +4002,7 @@ All financial transactions in the platform are processed through **Razorpay**, I
 ### 14.2 Environment Configuration
 
 ```
-# .env (injected from AWS Secrets Manager — never committed to source control)
+# .env — never committed to source control; injected via platform secret store or CI/CD environment
 
 # Razorpay Credentials
 RAZORPAY_KEY_ID=rzp_live_XXXXXXXXXXXX          # Public; sent to client SDK
@@ -4037,7 +4015,7 @@ RAZORPAY_KEY_SECRET=XXXXXXXXXXXXXXXXXXXXXXXX
 RAZORPAY_WEBHOOK_SECRET=XXXXXXXXXXXXXXXXXXXXXXX
 ```
 
-- Credentials are fetched at service start-up from **AWS Secrets Manager** via the `@nestjs/config` + AWS SDK integration.
+- Credentials are read at service start-up from **environment variables** via `@nestjs/config`; they are never hard-coded or committed to source control.
 - The `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` are **never logged**, never included in error responses, and never sent to any frontend client.
 - Separate credential sets are maintained per environment: `development`, `staging`, `production`.
 
@@ -4365,7 +4343,7 @@ The Admin web dashboard displays a real-time payments overview sourced from the 
 
 | Risk | Mitigation |
 |---|---|
-| Key secret exposure | `RAZORPAY_KEY_SECRET` stored in AWS Secrets Manager; injected as env var; never logged |
+| Key secret exposure | `RAZORPAY_KEY_SECRET` injected as env var from platform secret store; never logged |
 | Signature bypass | All client-reported payment successes validated server-side before status update |
 | Webhook replay attack | `webhookEventId` uniqueness constraint prevents duplicate processing |
 | Man-in-the-middle | TLS 1.3 enforced end-to-end; Razorpay API calls use HTTPS with cert pinning |
@@ -4539,17 +4517,17 @@ audit-generate.processor.ts  (BullMQ worker; max 2 concurrent)
   │         const checksum = createHash('sha256')
   │                            .update(pdfBuffer).digest('hex');
   │
-  ├── 6. Upload to S3
-  │         s3.putObject({
+  ├── 6. Upload to object storage
+  │         storageClient.putObject({
   │           Bucket: AUDIT_BUCKET,
-  │           Key: s3Key,
+  │           Key: objectKey,
   │           Body: pdfBuffer,
   │           ContentType: 'application/pdf',
-  │           ServerSideEncryption: 'aws:kms',
+  │           ServerSideEncryption: 'AES256',
   │           Metadata: { checksum, societyId, financialYear } })
   │
   └── 7. Update AuditReport record
-           { status: DRAFT, s3Key, checksum, summary: { ... } }
+           { status: DRAFT, objectKey, checksum, summary: { ... } }
        │
        ▼
 Admin receives push notification:
@@ -4563,7 +4541,7 @@ Admin opens audit report in Admin App / Web Dashboard
        │
        ▼
 GET /payments/audit-reports/:id
-  Returns: metadata + pre-signed S3 URL (1 h expiry) for PDF preview
+  Returns: metadata + pre-signed download URL (1 h expiry) for PDF preview
        │
        ▼
 Admin reviews PDF in browser / app PDF viewer
@@ -4707,15 +4685,15 @@ export class AuditGenerateProcessor {
     // 4. SHA-256 checksum
     const checksum = createHash('sha256').update(pdfBuffer).digest('hex');
 
-    // 5. Upload to S3 (server-side KMS encryption)
-    const s3Key = `audit-reports/${report.societyId}/${report.financialYear}`
-                + `/SOCIETY_ANNUAL/v${report.version}.pdf`;
-    await this.s3Service.upload(s3Key, pdfBuffer, 'application/pdf', checksum);
+    // 5. Upload to object storage (server-side AES-256 encryption)
+    const objectKey = `audit-reports/${report.societyId}/${report.financialYear}`
+                    + `/SOCIETY_ANNUAL/v${report.version}.pdf`;
+    await this.storageService.upload(objectKey, pdfBuffer, 'application/pdf', checksum);
 
     // 6. Persist metadata
     await this.auditRepo.update(report.id, {
       status:   AuditReportStatus.DRAFT,
-      s3Key,
+      objectKey,
       checksum,
       summary:  templateData.summary,
     });
@@ -4729,14 +4707,12 @@ export class AuditGenerateProcessor {
 
 | Aspect | Specification |
 |---|---|
-| **S3 Bucket** | Dedicated `society-audit-reports` bucket; public access blocked |
-| **Encryption** | Server-side encryption with AWS KMS (`aws:kms`); society-specific KMS key |
-| **Access** | Pre-signed URLs only (max 1 h expiry); bucket policy denies all `s3:GetObject` without pre-signed auth |
-| **Lifecycle — Standard tier** | 0–12 months after `createdAt`: S3 Standard (fast retrieval for AGM season) |
-| **Lifecycle — Archive tier** | 12 months+: auto-transition to S3 Glacier Instant Retrieval |
-| **Minimum retention** | 7 years (mandatory for financial records under Indian company law) |
-| **Immutability** | Published reports are write-protected via S3 Object Lock (COMPLIANCE mode, 7-year retention); `ARCHIVED` versions are retained but flagged read-only in DB |
-| **Versioning** | S3 bucket versioning enabled; each regeneration writes a new object key (`v1.pdf`, `v2.pdf`, …) |
+| **Storage Bucket** | Dedicated `society-audit-reports` bucket; public access blocked |
+| **Encryption** | Server-side encryption (AES-256, managed by the storage provider) |
+| **Access** | Pre-signed download URLs only (max 1 h expiry); bucket policy denies all `GetObject` requests without pre-signed auth |
+| **Minimum retention** | 7 years (mandatory for financial records under Indian company law); enforced by application-level write-protection (`PUBLISHED` → read-only in DB) |
+| **Immutability** | Published reports are flagged read-only in the database (`PUBLISHED` status); regeneration always creates a new object key (`v1.pdf`, `v2.pdf`, …) rather than overwriting |
+| **Versioning** | Storage bucket versioning enabled; each regeneration writes a new object key (`v1.pdf`, `v2.pdf`, …) |
 
 ---
 
@@ -4815,7 +4791,7 @@ Each panel exposes a different scope of TypeORM entities, enforced via AdminJS's
 | **VendorProfile** | List, Show, Edit (status) | Cross-society; masked phone by default; `phoneEncrypted` hidden; Custom: Reveal Phone (writes `AdminAuditLog`); document list shown with download links |
 | **SocietyEvent** | List, Show, Create, Edit, Custom: Pin, Custom: Remove | Cross-society; filter by society, status, eventType, date; `EventStatusBadge` component; RSVP count shown; Pin action enforces single-pin-per-society; Remove requires reason |
 | **EventMedia** | List, Show, Custom: Remove | Cross-society; thumbnail previewed inline; filter by event, mediaType, status; Remove action soft-deletes with moderationReason |
-| **MediaAsset** | List, Show, Custom: Invalidate Cache | Cross-society; filter by `contextType`, society, `status`, upload date; shows `originalWidth × originalHeight`, file size, variant count; Custom: **Invalidate Cache** purges CloudFront paths + clears `variants` JSONB; `new`/`edit`/`delete` disabled (managed via module-specific upload flows); `GET /media/admin/stats` widget visible on Super Admin dashboard |
+| **MediaAsset** | List, Show, Custom: Invalidate Cache | Cross-society; filter by `contextType`, society, `status`, upload date; shows `originalWidth × originalHeight`, file size, variant count; Custom: **Invalidate Cache** clears `variants` JSONB so next request regenerates variants; `new`/`edit`/`delete` disabled (managed via module-specific upload flows); `GET /media/admin/stats` widget visible on Super Admin dashboard |
 
 #### 16.3.2 Society Admin Panel Resources
 
@@ -4830,7 +4806,7 @@ Each panel exposes a different scope of TypeORM entities, enforced via AdminJS's
 | **SocietyBankAccount** | List, Show, Custom: Verify, Custom: Set Primary | Account number masked; `accountNumberEncrypted` property hidden; status badge coloured by verification state; `new` and `delete` actions disabled (use the main API); `edit` disabled — changes must go through the API to re-trigger verification |
 | **FlatRental** | List, Show, Custom: Download Document | Scoped to own society; filter by flat, status, date; phone + PAN masked; document download link via custom action that calls `/rentals/:id/documents/:docId/download-url` |
 | **TenantProfile** | List, Show | Scoped to own society; `panEncrypted`/`tenantPhoneEncrypted` hidden; `panLast4` + masked phone shown; `new`/`edit`/`delete` disabled |
-| **CommonFacility** | List, Show, Create, Edit, Custom: Add Blackout | Scoped to own society; photo S3 keys shown as download links; pricing schedule editable; `delete` disabled — use status `INACTIVE` |
+| **CommonFacility** | List, Show, Create, Edit, Custom: Add Blackout | Scoped to own society; photo object keys shown as pre-signed download links; pricing schedule editable; `delete` disabled — use status `INACTIVE` |
 | **FacilityBooking** | List, Show, Custom: Approve, Custom: Reject, Custom: Cancel | Scoped to own society; `BookingStatusBadge` component; Approve action creates Razorpay order; Cancel action triggers refund per policy (or full refund if Admin-initiated) |
 | **VendorProfile** | List, Show, Create, Edit, Custom: Toggle Status | Scoped to own society; masked phone; Custom: Reveal Phone (writes `AdminAuditLog`); document upload via pre-signed URL; `delete` action disabled — soft-delete only via Status toggle |
 | **SocietyEvent** | List, Show, Create, Edit, Custom: Pin, Custom: Remove | Scoped to own society; `EventStatusBadge` component; Create supports `createdByRole = ADMIN` (Official badge); Pin is single-per-society; Remove requires reason and notifies organiser |
@@ -5014,7 +4990,7 @@ The Super Admin Panel includes a custom dashboard page (`dashboard.component.tsx
 | **Super Admin auth** | Email + password + TOTP (Google Authenticator). `authenticate()` callback verifies both factors before granting session |
 | **Society Admin auth** | JWT issued by the main API Gateway; AdminJS session piggybacks on same JWT claims (validated in `authenticate()` callback) |
 | **Session storage** | Express-session backed by Redis (same Redis instance as BullMQ); session TTL 8 hours |
-| **Cookie** | `HttpOnly`, `Secure`, `SameSite=Strict`; cookie secret stored in AWS Secrets Manager |
+| **Cookie** | `HttpOnly`, `Secure`, `SameSite=Strict`; cookie secret injected via environment variable |
 | **Route protection** | The AdminJS route (`/superadmin`, `/panel`) is protected by NestJS `AdminModule` auth; no endpoint is reachable without a valid session |
 | **IP allow-listing** | Admin routes are exposed only on an internal VPC Load Balancer in production; VPN required for access |
 | **Audit logging** | Every AdminJS action (create, edit, delete, custom) is intercepted via a global `after()` hook that writes a structured log to the `admin_audit_logs` table: `{ adminId, action, resource, recordId, changedFields, ip, timestamp }` |
@@ -5074,7 +5050,7 @@ AdminJS exposes powerful CRUD actions by default. The following restrictions are
 | **Edit `societyId`** | Property `isEditable: false` on all resources to prevent tenant reassignment |
 | **Edit payment records** | `edit` and `new` actions disabled on `Payment` resource |
 | **Export CSV** | Disabled by default; Super Admin may enable for specific resources via feature flag |
-| **New Society** | Allowed only in Super Admin Panel; triggers provisioning workflow (creates schema partition, sets up KMS key) |
+| **New Society** | Allowed only in Super Admin Panel; triggers provisioning workflow (creates society tenant record, provisions first Admin) |
 
 
 ---

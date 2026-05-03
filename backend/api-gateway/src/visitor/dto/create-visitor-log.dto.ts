@@ -16,15 +16,15 @@ import {
 export class CreateVisitorLogDto {
   /** Target society (from JWT claims in a real flow) */
   @IsUUID()
-  societyId: string
+  societyId!: string
 
   /** Flat the visitor is heading to */
   @IsUUID()
-  flatId: string
+  flatId!: string
 
   @IsString()
   @IsNotEmpty()
-  visitorName: string
+  visitorName!: string
 
   /**
    * E.164 phone number — e.g. +919876543210
@@ -34,7 +34,7 @@ export class CreateVisitorLogDto {
   @Matches(/^\+[1-9]\d{6,14}$/, {
     message: 'visitorPhone must be a valid E.164 number (e.g. +919876543210)',
   })
-  visitorPhone: string
+  visitorPhone!: string
 
   @IsString()
   @IsOptional()
@@ -42,7 +42,7 @@ export class CreateVisitorLogDto {
 
   @IsString()
   @IsNotEmpty()
-  purpose: string
+  purpose!: string
 
   /** GDPR consent captured at the gate terminal */
   @IsBoolean()

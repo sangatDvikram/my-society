@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage"
   },
   "dependencies": {
     "@knadh/oat": "0.5.0",
@@ -23,14 +26,52 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
+  "jest": {
+    "moduleFileExtensions": ["js", "jsx", "json", "ts", "tsx"],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.(ts|tsx)$",
+    "transform": {
+      "^.+\\.(t|j)sx?$": ["ts-jest", { "tsconfig": "tsconfig.test.json" }]
+    },
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1",
+      "^@society/shared-ui-components$": "<rootDir>/../../../../packages/shared-ui-components/src",
+      "^@society/shared-ui-components/(.*)$": "<rootDir>/../../../../packages/shared-ui-components/src/$1",
+      "^@society/shared-types$": "<rootDir>/../../../../packages/shared-types/src",
+      "^@society/shared-validators$": "<rootDir>/../../../../packages/shared-validators/src",
+      "^@society/shared-i18n$": "<rootDir>/../../../../packages/shared-i18n/src",
+      "\\.css$": "<rootDir>/../__mocks__/styleMock.js"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(@society)/)"
+    ],
+    "setupFilesAfterEnv": ["<rootDir>/../jest.setup.ts"],
+    "testEnvironment": "jsdom",
+    "coverageDirectory": "../coverage",
+    "collectCoverageFrom": [
+      "**/*.{ts,tsx}",
+      "!**/*.spec.{ts,tsx}",
+      "!**/*.d.ts",
+      "!**/index.ts"
+    ],
+    "coverageReporters": ["text", "lcov", "html"]
+  },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.0",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
     "postcss": "^8.4.0",
     "postcss-import": "^16.1.1",
     "tailwindcss": "^3.4.0",
+    "ts-jest": "^29.4.9",
     "typescript": "^5.7.0"
   }
 }

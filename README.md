@@ -4,7 +4,7 @@
 
 > A multi-tenant SaaS platform that digitises the end-to-end operations of residential housing societies — visitor logging, maintenance, payments, rentals, facilities, events, and annual financial audits.
 
-**PRD Version:** 1.0.0 · **Status:** Draft · **Stack:** Lerna monorepo · NestJS · React Native · Next.js + React · PostgreSQL · AWS
+**PRD Version:** 1.0.0 · **Status:** Draft · **Stack:** Lerna monorepo · NestJS · React Native · Next.js + React · PostgreSQL · Docker
 
 ---
 
@@ -31,7 +31,7 @@ Key design principles:
 
 - **Multi-tenancy** — a single deployment serves multiple societies; data is isolated at the `society_id` level throughout the database and API layers.
 - **GDPR compliance** — soft-delete with 90-day anonymisation, AES-256-GCM encryption for all PII (phone numbers, PAN, bank account numbers), and explicit data-erasure workflows.
-- **Security-first** — phone numbers stored as dual columns (AES ciphertext + HMAC-SHA256 hash for lookups), AWS KMS for key management, and S3 pre-signed URLs for all document access.
+- **Security-first** — phone numbers stored as dual columns (AES-256-GCM ciphertext + HMAC-SHA256 hash for lookups); all secrets injected via environment variables; pre-signed URLs for all document and media access.
 - **Cross-platform** — every user-facing application ships as both a **React Native (Expo)** mobile app and a **Next.js + React** web dashboard.
 
 ---
@@ -55,10 +55,10 @@ All six app packages share a design token system via `packages/shared-ui-tokens`
 | **`api-gateway`** | Single public entry point — OTP/JWT auth, TOTP 2FA, request routing via HTTP proxy |
 | **`owner-service`** | Owner-facing APIs: flats, maintenance, visitor logs, payments, rentals, facility bookings, events, PDF statements |
 | **`admin-service`** | Admin-facing APIs: societies, staff, announcements, facility management, vendor registry, audit PDF generation, AdminJS panel |
-| **`super-admin-service`** | Platform management: society onboarding, subscriptions, feature flags, KMS key rotation, global AdminJS panel |
-| **`media-service`** | Common Image Media Service — unique image ID generation, S3 upload, on-demand Sharp transforms (resize/WebP/quality), CloudFront variant caching |
+| **`super-admin-service`** | Platform management: society onboarding, subscriptions, feature flags, DEK rotation, global AdminJS panel |
+| **`media-service`** | Common Image Media Service — unique image ID generation, object storage upload, on-demand Sharp transforms (resize/WebP/quality), variant caching |
 
-All services are NestJS applications containerised with Docker and orchestrated via Kubernetes (EKS/GKE). Async jobs run on **BullMQ** backed by **Redis**.
+All services are NestJS applications containerised with Docker. They communicate over an internal network and are deployed via Docker Compose (or any standard container platform). Async jobs run on **BullMQ** backed by **Redis**.
 
 ### Shared Packages
 
@@ -87,14 +87,12 @@ All services are NestJS applications containerised with Docker and orchestrated 
 | Monorepo | Lerna (+ optional Nx) | Lerna 8.x |
 | PDF Generation | Puppeteer (headless Chromium) | 22.x |
 | Image Processing | Sharp (libvips Node binding) | 0.33.x |
-| Object Storage | AWS S3 | — |
-| CDN | AWS CloudFront | — |
+| Object Storage | S3-compatible (AWS S3 by default; swappable with MinIO / LocalStack in dev) | — |
 | Payments | Razorpay (UPI, cards, Autopay, Route) | — |
 | Push Notifications | Firebase Cloud Messaging (FCM) | — |
-| Containers | Docker + Kubernetes (EKS/GKE) | Docker 25.x / K8s 1.30+ |
+| Containers | Docker + Docker Compose | Docker 25.x |
 | CI/CD | GitHub Actions | — |
-| Monitoring | OpenTelemetry → Grafana / Loki / Tempo | — |
-| Secret Management | AWS KMS + Parameter Store | — |
+| Secret Management | Environment variables (`.env`; never committed) | — |
 
 ---
 
@@ -106,12 +104,12 @@ All services are NestJS applications containerised with Docker and orchestrated 
 | **Maintenance Requests** | Owner-raised tickets, status tracking, admin assignment |
 | **Payments** | Razorpay UPI/card invoices, UPI Autopay mandates, Razorpay Route for society settlements |
 | **Society Bank Accounts** | AES-encrypted bank details, Razorpay Reverse Penny Drop verification, primary account management |
-| **Financial Year Audits** | Puppeteer-generated PDF reports (SHA-256 checksum, S3 Object Lock, 7-year retention) |
-| **Flat Rentals** | Tenant profiles with encrypted PAN/phone, S3 rent agreement storage, GDPR anonymisation |
+| **Financial Year Audits** | Puppeteer-generated PDF reports (SHA-256 checksum, application-level write-protection, 7-year retention) |
+| **Flat Rentals** | Tenant profiles with encrypted PAN/phone, object storage for rent agreements, GDPR anonymisation |
 | **Facility Management** | Facility CRUD, fixed/hourly/variable pricing, booking approval workflow, blackout periods |
 | **Vendor Management** | Empanelled vendor directory, encrypted phone reveal-log, document storage |
 | **Society Events** | Owner-created events, facility linking, RSVP cap, photo/video gallery, admin moderation |
-| **Common Image Media** | Unique Image ID (UUIDv4), on-demand Sharp transforms (`size`, `width`, `height`, `quality`, `format`, `blur`), CloudFront variant caching |
+| **Common Image Media** | Unique Image ID (UUIDv4), on-demand Sharp transforms (`size`, `width`, `height`, `quality`, `format`, `blur`), variant caching with pre-signed delivery |
 | **AdminJS Panels** | Auto-generated admin UIs for Society Admin and Super Admin with multi-tenancy hooks |
 
 ---
@@ -123,7 +121,7 @@ All services are NestJS applications containerised with Docker and orchestrated 
 - Node.js ≥ 22.x (LTS)
 - Yarn ≥ 4.x — enabled via [Corepack](https://nodejs.org/api/corepack.html) (ships with Node 22)
 - Docker + Docker Compose
-- AWS CLI (configured with appropriate credentials for S3, KMS, CloudFront)
+- Object storage credentials (AWS S3, [LocalStack](https://localstack.cloud/), or MinIO) — only needed for storage-backed features
 - A Razorpay test account
 
 ### Enable Yarn (first-time only)
@@ -245,7 +243,7 @@ alankapuri-my-society/                  ← git root
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                      ← ★ CI pipeline (lint → type-check → test → SonarCloud → Snyk)
-│       └── cd.yml                      ← ★ CD pipeline (Docker build → ECR push → Helm upgrade on EKS)
+│       └── cd.yml                      ← ★ CD pipeline (Docker build → push to container registry → deploy)
 │
 ├── applications/
 │   ├── owner-app/
@@ -318,7 +316,7 @@ alankapuri-my-society/                  ← git root
 │   │   │   ├── app.module.ts · app.controller.ts · app.service.ts · app.controller.spec.ts
 │   │   │   └── database/database.module.ts
 │   │   ├── Dockerfile                  ← ★ Multi-stage: deps → build → runner (node:22-alpine)
-│   │   ├── .env.example               ← DB · JWT · AdminJS session · Redis · AWS env vars
+│   │   ├── .env.example               ← DB · JWT · AdminJS session · Redis env vars
 │   │   ├── package.json               ← @society/admin-service
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.build.json
@@ -328,17 +326,17 @@ alankapuri-my-society/                  ← git root
 │   │   │   ├── app.module.ts · app.controller.ts · app.service.ts · app.controller.spec.ts
 │   │   │   └── database/database.module.ts
 │   │   ├── Dockerfile                  ← ★ Multi-stage: deps → build → runner (node:22-alpine)
-│   │   ├── .env.example               ← DB · JWT · TOTP · KMS · Secrets Manager env vars
+│   │   ├── .env.example               ← DB · JWT · TOTP · DEK · HMAC_SECRET env vars
 │   │   ├── package.json               ← @society/super-admin-service
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.build.json
-│   └── media-service/                  ← ★ NestJS · S3 pre-signed URLs, Sharp, FFmpeg, CloudFront (port 3004)
+│   └── media-service/                  ← ★ NestJS · object storage pre-signed URLs, Sharp, FFmpeg (port 3004)
 │       ├── src/
 │       │   ├── main.ts                 ← Bootstrap (port 3004)
 │       │   ├── app.module.ts · app.controller.ts · app.service.ts · app.controller.spec.ts
 │       │   └── database/database.module.ts
 │       ├── Dockerfile                  ← ★ Multi-stage + apk add ffmpeg in runner stage
-│       ├── .env.example               ← DB · S3 buckets · CloudFront · KMS · BullMQ env vars
+│       ├── .env.example               ← DB · storage buckets · BullMQ env vars
 │       ├── package.json               ← @society/media-service
 │       ├── tsconfig.json
 │       └── tsconfig.build.json
