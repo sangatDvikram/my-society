@@ -18,7 +18,7 @@
 6. [Non-Functional Requirements](#6-non-functional-requirements)
 7. [Data Schema Overview](#7-data-schema-overview)
 8. [API Gateway Architecture](#8-api-gateway-architecture)
-9. [Security & GDPR Compliance](#9-security--gdpr-compliance)
+9. [Security, GDPR & DPDP Compliance](#9-security-gdpr--dpdp-compliance)
 10. [Technical Architecture](#10-technical-architecture)
 11. [Monorepo & Folder Structure](#11-monorepo--folder-structure)
 12. [Deployment & Scalability](#12-deployment--scalability)
@@ -30,7 +30,7 @@
 
 ## 1. Executive Summary
 
-The **Society Management and Logging System** is a multi-tenant SaaS platform that digitises the end-to-end operations of residential housing societies. It replaces paper-based visitor registers, manual maintenance tracking, and fragmented communication channels with a unified, auditable, and GDPR-compliant digital system.
+The **Society Management and Logging System** is a multi-tenant SaaS platform that digitises the end-to-end operations of residential housing societies. It replaces paper-based visitor registers, manual maintenance tracking, and fragmented communication channels with a unified, auditable, and GDPR/DPDP-compliant digital system.
 
 The platform is composed of **three client-facing applications**, each delivered as a **cross-platform mobile app (React Native)** and a **web dashboard (Next.js + React)**:
 
@@ -51,7 +51,7 @@ The backend is a **Node.js microservices** system built with **NestJS + TypeORM*
 - Reduce visitor-related security incidents by providing a verifiable, timestamped entry/exit log.
 - Eliminate paper-based maintenance registers and give owners real-time visibility into their flat's status.
 - Enable platform operators to onboard new societies in under **15 minutes** with zero code changes.
-- Achieve full **GDPR compliance** to support societies in the EU and privacy-conscious markets.
+- Achieve full **GDPR and DPDP (Digital Personal Data Protection Act, 2023 — India) compliance** to support societies in the EU and India's privacy-conscious markets.
 
 ### 2.2 Key Performance Indicators (KPIs)
 
@@ -62,7 +62,7 @@ The backend is a **Node.js microservices** system built with **NestJS + TypeORM*
 | Mobile app crash-free sessions | ≥ 99.5% |
 | API gateway p99 latency | < 300 ms |
 | Data breach incidents | 0 per year |
-| GDPR data-erasure SLA | ≤ 30 days from request |
+| GDPR/DPDP data-erasure SLA | ≤ 30 days from request |
 
 ---
 
@@ -107,7 +107,7 @@ Super Admin (Platform Operator)
 | OWN-005 | I want to raise a maintenance request (plumbing, electrical, etc.). | Request saved with timestamp; Admin notified; owner can track status. |
 | OWN-006 | I want to view the maintenance log history of my flat. | Full audit log visible, paginated, with filter by date and category. |
 | OWN-007 | I want to download my invoices as PDF for tax purposes. | PDF generated server-side; download link valid 24 h. |
-| OWN-008 | I want to opt out of non-essential data processing (GDPR). | Preference stored; non-essential analytics suppressed within 24 h. |
+| OWN-008 | I want to opt out of non-essential data processing (GDPR/DPDP). | Preference stored; non-essential analytics suppressed within 24 h. |
 | OWN-009 | I want to request deletion of my account and personal data. | Erasure workflow triggered; completed ≤ 30 days; confirmation sent. |
 | OWN-010 | I want to register a domestic staff member (maid, driver) for recurring entry. | Staff profile created; recurring entry pass valid for specified period. |
 | OWN-011 | I want to download a PDF statement of all payments I made to the society during a financial year, for my own tax records. | PDF generated on demand; covers April 1 – March 31; includes invoice number, date, amount, mode, and status; available within 60 s of request. |
@@ -115,7 +115,7 @@ Super Admin (Platform Operator)
 | OWN-013 | I want to mark my flat as rented out and add my tenant's details (name, phone, email, address) so the society has an accurate occupancy record. | Tenant profile created; flat status updated to `RENTED`; society admin notified; tenant details encrypted at rest. |
 | OWN-014 | I want to upload a copy of the rent agreement and tenant's PAN card so the society can maintain legal compliance records. | Documents uploaded (PDF/image ≤ 10 MB each); stored AES-256-GCM encrypted in private object storage; owner and admin can download via pre-signed URLs; documents never publicly accessible. |
 | OWN-015 | I want to view the active tenancy details for my flat at any time, including the rent period and documents I have uploaded. | Shows tenant name (masked phone), rent start/end dates, monthly rent amount, agreement expiry, and upload status of each document; full phone only shown to admin. |
-| OWN-016 | I want to end an active tenancy when my tenant vacates, so the flat is marked vacant and old tenant records are archived. | Tenancy marked `ENDED`; flat status reverted to `VACANT`; tenant profile soft-deleted (GDPR-compliant anonymisation after 90-day retention period); admin notified. |
+| OWN-016 | I want to end an active tenancy when my tenant vacates, so the flat is marked vacant and old tenant records are archived. | Tenancy marked `ENDED`; flat status reverted to `VACANT`; tenant profile soft-deleted (GDPR/DPDP-compliant anonymisation after 90-day retention period); admin notified. |
 | OWN-017 | I want to update my tenant's details or replace the rent agreement document if it is renewed. | New document version uploaded; previous version archived in object storage with original upload timestamp; history retained for audit. |
 | OWN-018 | I want to browse all common facilities available in my society (clubhouse, gym, pool, etc.) so I know what I can book. | Facility list shows name, description, capacity, pricing type (fixed/hourly/variable), availability calendar, and photos; fetched from `admin-service`. |
 | OWN-019 | I want to request a booking of the clubhouse (or any common facility) for a private event on a specific date and time. | Booking request created with `PENDING_APPROVAL` status; society admin notified immediately; owner receives confirmation of submission. |
@@ -144,7 +144,7 @@ Super Admin (Platform Operator)
 | ADM-007 | I want to configure society-specific rules (visitor hours, parking limits). | Rules persisted; enforced at gate terminal and owner app. |
 | ADM-008 | I want to view a complete audit trail of all admin actions. | Every create/update/delete action logged with actor ID and timestamp. |
 | ADM-009 | I want to block a specific visitor or vehicle permanently. | Block-list entry created; guard terminal alerts on match. |
-| ADM-010 | I want to export all resident data in a machine-readable format (GDPR portability). | Export generated as JSON/CSV with decrypted fields only after dual-admin approval. |
+| ADM-010 | I want to export all resident data in a machine-readable format (GDPR/DPDP portability). | Export generated as JSON/CSV with decrypted fields only after dual-admin approval. |
 | ADM-011 | I want to generate a full financial year audit PDF report covering all money received by and disbursed from the society account. | Report generated as a structured, paginated PDF; covers April 1 – March 31; breaks down inflows and outflows by category, flat, and month. |
 | ADM-012 | I want to schedule the annual audit report to be auto-generated at year-close (April 1) so I do not have to trigger it manually. | BullMQ scheduled job fires at 00:01 IST on April 1; generates draft PDF; Admin receives notification to review and publish. |
 | ADM-013 | I want to digitally sign and publish the annual audit PDF so owners can verify its authenticity. | SHA-256 checksum embedded in PDF metadata and stored in DB; published report marked immutable; any re-generation creates a new version record. |
@@ -201,7 +201,7 @@ Guard opens Gate Terminal (Admin App – Guard role)
     └─ [Walk-in visitor] ──► Guard captures:
                                   • Visitor name
                                   • Phone number (OTP-verified, ephemeral)
-                                  • Photo (optional, GDPR consent required)
+                                  • Photo (optional, GDPR/DPDP consent required)
                                   • Vehicle number (optional)
                                   • Purpose of visit
                                   • Host flat number
@@ -239,10 +239,10 @@ Guard opens Gate Terminal (Admin App – Guard role)
 | `exit_guard_id` | UUID | Nullable FK → staff |
 | `approval_status` | ENUM | `PENDING`, `APPROVED`, `REJECTED`, `TIMEOUT` |
 | `pre_approved_token` | VARCHAR(64) | Nullable; hashed OTP/QR token |
-| `photo_url` | VARCHAR(512) | Pre-signed download URL; GDPR-flagged |
-| `gdpr_consent` | BOOLEAN | Required if photo captured |
+| `photo_url` | VARCHAR(512) | Pre-signed download URL; GDPR/DPDP-flagged |
+| `gdpr_consent` | BOOLEAN | Required if photo captured (satisfies both GDPR consent and DPDP notice-and-consent requirements) |
 | `created_at` | TIMESTAMPTZ | |
-| `deleted_at` | TIMESTAMPTZ | Soft delete for GDPR erasure |
+| `deleted_at` | TIMESTAMPTZ | Soft delete for GDPR/DPDP erasure |
 
 #### 5.1.4 Staff & Domestic Help Logs
 
@@ -352,7 +352,7 @@ All monetary movements are classified into two directions:
 | Requirement ID | Description |
 |---|---|
 | RENT-009 | When a new tenancy is created, the system must send an **in-app + push notification** to the Society Admin: `"Flat {flatNumber} has been rented out by owner {ownerName}. Tenant: {tenantName}."` The flat's `status` in the `flats` table must be updated to `RENTED`. |
-| RENT-010 | When a tenancy is ended (`status → ENDED`), the flat's `status` must revert to `VACANT`. The Admin must be notified. The tenancy record (including encrypted fields) must be retained for a minimum of **90 days** after `endDate` before GDPR anonymisation runs. |
+| RENT-010 | When a tenancy is ended (`status → ENDED`), the flat's `status` must revert to `VACANT`. The Admin must be notified. The tenancy record (including encrypted fields) must be retained for a minimum of **90 days** after `endDate` before GDPR/DPDP anonymisation runs. |
 | RENT-011 | Society Admins and Super Admins may **view all tenancies** across their society, including decrypted tenant phone (via privileged endpoint) and document download links. Owners may only view their own flat's tenancy. Staff and other owners have no access to tenancy data. |
 | RENT-012 | If the rent agreement has an `agreementEndDate` and that date passes without the tenancy being marked `ENDED`, the system must send a **renewal reminder** notification to the owner 30 days before expiry and again 7 days before expiry. |
 
@@ -443,9 +443,9 @@ All monetary movements are classified into two directions:
 |---|---|
 | MED-001 | The **event organiser** and society **Admins** may upload media to an event. Other owners may not upload media. Media upload is allowed while the event is in `UPCOMING`, `ONGOING`, or `COMPLETED` status (within the 7-day post-completion window per EVT-007). |
 | MED-002 | **Supported media types and limits per event:** Photos (JPEG, PNG, WEBP) — max individual file size **20 MB**, max **50 photos** per event. Videos (MP4, MOV) — max individual file size **500 MB**, max **5 videos** per event. Exceeding either limit returns `422 Unprocessable Entity`. |
-| MED-003 | Media is stored in the **`society-event-media`** private storage bucket with server-side encryption. Object key convention: `event-media/{societyId}/{eventId}/{mediaType}/{mediaId}_{originalFilename}`. Direct public access is blocked; all downloads served via pre-signed download URLs (1-hour expiry). |
-| MED-004 | The upload flow follows the same pre-signed PUT pattern used for rental documents: (1) caller requests a pre-signed PUT URL; (2) client uploads directly to object storage; (3) caller calls a confirm endpoint; (4) system creates an `EventMedia` record. |
-| MED-005 | **Thumbnail generation:** On confirmation of a photo upload, the system enqueues a BullMQ job that uses **Sharp** (Node.js image processing) to produce a 480×480-px WebP thumbnail stored at `event-media/{societyId}/{eventId}/thumbnails/{mediaId}_thumb.webp`. On video confirmation, a thumbnail frame is extracted using **FFmpeg** at the 1-second mark and stored at `event-media/{societyId}/{eventId}/thumbnails/{mediaId}_thumb.jpg`. Thumbnails are used in feed cards and gallery grids. |
+| MED-003 | Media (photos and videos) is uploaded to **Cloudinary** under the `authenticated` delivery type (no public access). `public_id` convention: `event-media/{societyId}/{eventId}/{mediaType}/{mediaId}`. All downloads served via Cloudinary **signed delivery URLs** (1-hour expiry), generated server-side — raw Cloudinary URLs are never returned unsigned. |
+| MED-004 | The upload flow is a **signed direct-to-Cloudinary upload**: (1) caller requests a signed upload payload (`timestamp`, `signature`, `apiKey`, `folder`) from the service; (2) client uploads directly to Cloudinary using that payload; (3) caller calls a confirm endpoint with the returned `public_id`; (4) system creates an `EventMedia` record from Cloudinary's upload response (dimensions, format, EXIF, duration for video). |
+| MED-005 | **Thumbnail generation:** Cloudinary **eager transformations** generate thumbnails at upload time — a 480×480-px WebP crop for photos, and an auto-extracted poster frame (1-second mark) for videos — with no separate BullMQ job required. For large videos, `eager_async: true` defers generation and Cloudinary's webhook callback flips `thumbnailReady` to `true`. Thumbnails are used in feed cards and gallery grids. |
 
 #### 5.11.2 Viewing & Moderation
 
@@ -457,19 +457,20 @@ All monetary movements are classified into two directions:
 
 ### 5.12 Common Image Media Service
 
-The **Common Image Media Service** (`media-service`) is a dedicated microservice that acts as the single platform-wide entry point for all image uploads and deliveries. Every image displayed in the system — facility photos, event banners, event gallery media, announcement thumbnails, vendor logos, and society logos — must be routed through this service. The service assigns a globally unique **Image ID**, stores the original in object storage, and serves transformed variants on demand via query parameters, caching each variant in object storage.
+The **Common Image Media Service** (`media-service`) is a dedicated microservice that acts as the single platform-wide entry point for all image and video uploads and deliveries. Every image displayed in the system — facility photos, event banners, event gallery media, announcement thumbnails, vendor logos, and society logos — must be routed through this service. The service assigns a globally unique **Image ID**, uploads the original to **Cloudinary**, and serves transformed variants on demand via query parameters that are translated into Cloudinary's URL-based transformation API. Cloudinary's CDN caches every derived variant natively — `media-service` holds no local variant cache.
 
-> **Scope — Photos only (v1):** The media-service handles **images** (JPEG, PNG, WEBP, GIF) in v1. Videos continue to be handled by module-specific pre-signed upload flows (see Section 5.11).
+> **Scope — Images & Video:** Cloudinary's unified upload/transform API covers both **images** (JPEG, PNG, WEBP, GIF) and **video** (MP4, MOV). Event media (Section 5.11) is uploaded through the same Cloudinary-backed pipeline as `media-service`.
 
 #### 5.12.1 Upload & Unique ID Generation
 
 | Requirement ID | Description |
 |---|---|
-| IMG-001 | Every image upload must produce a **globally unique Image ID** — a `UUIDv4` string (e.g. `3f2a8c1d-e7b4-4f9a-b2d6-1a0c5e8f3b7d`). The Image ID is the stable public identifier for the asset; clients reference it in all transform URLs. The underlying object storage key and bucket must never be exposed to clients. |
-| IMG-002 | The upload flow is a **two-step pre-signed upload**: (1) caller requests an upload URL from `media-service` (providing `mimeType`, `fileSizeBytes`, `context` — see IMG-003); (2) client uploads directly to object storage using the pre-signed upload URL; (3) caller calls a confirm endpoint; (4) `media-service` fetches image metadata (dimensions, format) from object storage using **Sharp** and creates a `MediaAsset` record. The `imageId` is returned in both step (1) and step (3) responses. |
-| IMG-003 | The upload request must include a **context tag** (`contextType`: `FACILITY_PHOTO`, `EVENT_BANNER`, `EVENT_GALLERY`, `ANNOUNCEMENT`, `VENDOR_LOGO`, `SOCIETY_LOGO`, `PROFILE_AVATAR`) and optional `contextId` (e.g. `facilityId`, `eventId`). These are stored on the `MediaAsset` for filtering and audit; they do not affect the object key or transform pipeline. |
-| IMG-004 | Accepted image formats: **JPEG, PNG, WEBP, GIF** (static only; animated GIF decoded to first frame). Maximum upload file size: **20 MB** for all context types except `SOCIETY_LOGO` and `PROFILE_AVATAR` (max 5 MB). Requests exceeding size limits must be rejected with `413 Payload Too Large` before a pre-signed URL is issued. |
-| IMG-005 | Original images are stored in the **`society-media-assets`** private storage bucket under the key `originals/{societyId}/{contextType}/{imageId}.{ext}`. Server-side encryption is applied. The bucket has **no public access**; all client delivery uses pre-signed URLs generated by `media-service`. |
+| IMG-001 | Every image upload must produce a **globally unique Image ID** — a `UUIDv4` string (e.g. `3f2a8c1d-e7b4-4f9a-b2d6-1a0c5e8f3b7d`). The Image ID is the stable public identifier for the asset; clients reference it in all transform URLs. The underlying Cloudinary `public_id` and delivery URL must never be exposed directly to clients. |
+| IMG-002 | The upload flow is a **two-step signed Cloudinary upload**: (1) caller requests a signed upload payload from `media-service` (providing `mimeType`, `fileSizeBytes`, `context` — see IMG-003), which returns `{ imageId, cloudName, apiKey, timestamp, signature, folder }`; (2) client uploads directly to Cloudinary's upload endpoint using that signed payload; (3) caller calls a confirm endpoint with the returned Cloudinary `public_id`; (4) `media-service` reads dimensions, format, and EXIF metadata directly from Cloudinary's upload response and creates a `MediaAsset` record. The `imageId` is returned in both step (1) and step (3) responses. |
+| IMG-003 | The upload request must include a **context tag** (`contextType`: `FACILITY_PHOTO`, `EVENT_BANNER`, `EVENT_GALLERY`, `ANNOUNCEMENT`, `VENDOR_LOGO`, `SOCIETY_LOGO`, `PROFILE_AVATAR`) and optional `contextId` (e.g. `facilityId`, `eventId`). These are stored on the `MediaAsset` for filtering and audit; they do not affect the Cloudinary folder or transform pipeline. |
+| IMG-004 | Accepted image formats: **JPEG, PNG, WEBP, GIF** (static only; animated GIF decoded to first frame). Maximum upload file size: **20 MB** for all context types except `SOCIETY_LOGO` and `PROFILE_AVATAR` (max 5 MB). Requests exceeding size limits must be rejected with `413 Payload Too Large` before a signed upload payload is issued. |
+| IMG-004a | Cloudinary auto-extracts **EXIF metadata** on upload (`image_metadata: true`) and auto-corrects image orientation using the EXIF `Orientation` tag before serving any variant. GPS EXIF tags are stripped by `media-service` before persisting `MediaAsset.exif`, for GDPR/DPDP data-minimisation. |
+| IMG-005 | Original images are uploaded to **Cloudinary** under the `authenticated` delivery type (no public access), using the `public_id` convention `society-media-assets/{societyId}/{contextType}/{imageId}`. All client delivery uses Cloudinary **signed delivery URLs** generated by `media-service` (token-authenticated, 1-hour expiry by default). |
 
 #### 5.12.2 On-Demand Image Transformation Parameters
 
@@ -477,19 +478,19 @@ The **Common Image Media Service** (`media-service`) is a dedicated microservice
 |---|---|
 | IMG-006 | The `media-service` exposes a **transform endpoint**: `GET /media/images/:imageId` that accepts the following query parameters. All parameters are optional; omitting them returns the original at full resolution with no quality reduction. |
 | IMG-007 | **Size presets (`size`)** — a named shorthand that maps to a fixed `width × height` bounding box. Preset values and their dimensions: `thumbnail` → 120×120, `small` → 320×240, `medium` → 640×480, `large` → 1280×960, `xlarge` → 1920×1440, `original` → no resize. When `size` is specified alongside explicit `width`/`height` parameters, explicit dimensions take precedence and `size` is ignored. |
-| IMG-008 | **Explicit dimensions (`width`, `height`)** — integer values in pixels (range 1–4000 each). The image is resized to fit within the specified bounding box while **preserving aspect ratio** (Sharp `fit: 'inside'` mode) unless `crop=true` is also passed, in which case Sharp `fit: 'cover'` is used. Passing only `width` or only `height` resizes along that axis and scales the other proportionally. |
-| IMG-009 | **Quality (`quality`)** — integer 1–100 controlling lossy compression. Default: **80** for JPEG/WEBP output, **lossless** for PNG output. Values outside 1–100 return `400 Bad Request`. |
-| IMG-010 | **Output format (`format`)** — accepted values: `webp`, `jpeg`, `png`, `avif`. Default: **`webp`** (best compression-to-quality ratio for web and mobile). If the client does not support WebP, it should pass `format=jpeg`. AVIF is supported but CPU-intensive; it is rate-limited to 10 requests/s per service instance. |
-| IMG-011 | **Crop mode (`crop`)** — boolean (`true`/`false`), default `false`. When `true`, the image is centre-cropped to exactly `width × height` (requires both dimensions to be specified; otherwise returns `400 Bad Request`). |
-| IMG-012 | **Blur (`blur`)** — integer 1–100 (sigma value passed to Sharp's Gaussian blur). Default: no blur. Used for placeholder progressive loading (e.g. `blur=5` for a low-quality image placeholder, LQIP). |
+| IMG-008 | **Explicit dimensions (`width`, `height`)** — integer values in pixels (range 1–4000 each). The image is resized to fit within the specified bounding box while **preserving aspect ratio** (Cloudinary `c_fit` crop mode) unless `crop=true` is also passed, in which case Cloudinary `c_fill,g_auto` (content-aware auto-gravity fill) is used. Passing only `width` or only `height` resizes along that axis and scales the other proportionally. |
+| IMG-009 | **Quality (`quality`)** — integer 1–100 controlling lossy compression, mapped to Cloudinary's `q_<n>` transformation. Default: **80** for JPEG/WEBP output, **lossless** for PNG output. Values outside 1–100 return `400 Bad Request`. Clients may also omit `quality` and rely on Cloudinary's `q_auto` perceptual-quality encoding. |
+| IMG-010 | **Output format (`format`)** — accepted values: `webp`, `jpeg`, `png`, `avif`. Default: **`webp`** (best compression-to-quality ratio for web and mobile). If the client does not support WebP, it should pass `format=jpeg`. AVIF is supported via Cloudinary's `f_avif` and runs on Cloudinary's infrastructure — no per-instance rate limit is required since no local CPU is consumed. Omitting `format` lets Cloudinary's `f_auto` auto-negotiate the best format per requesting browser. |
+| IMG-011 | **Crop mode (`crop`)** — boolean (`true`/`false`), default `false`. When `true`, the image is cropped to exactly `width × height` using Cloudinary's content-aware `c_fill,g_auto` gravity (requires both dimensions to be specified; otherwise returns `400 Bad Request`). |
+| IMG-012 | **Blur (`blur`)** — integer 1–100, mapped to Cloudinary's `e_blur:<n*100>` transformation. Default: no blur. Used for placeholder progressive loading (e.g. `blur=5` for a low-quality image placeholder, LQIP). |
 
-#### 5.12.3 Variant Caching & CDN Delivery
+#### 5.12.3 CDN Delivery (Cloudinary-Managed)
 
 | Requirement ID | Description |
 |---|---|
-| IMG-013 | Each unique combination of `(imageId, width, height, quality, format, crop, blur)` constitutes a **variant**. Variants are stored in object storage under `variants/{societyId}/{contextType}/{imageId}/{params_hash}.{format}` where `params_hash` is the SHA-256 of the canonical sorted query string. On the first request for a variant, the `media-service` fetches the original from object storage, applies the Sharp transform, stores the variant back to object storage, and streams the result to the client. Subsequent requests for the same variant are served directly from the cached variant object. |
-| IMG-015 | **Cache-Control headers** returned by the transform endpoint: `Cache-Control: public, max-age=604800, stale-while-revalidate=86400` (7-day browser cache, 1-day stale-while-revalidate). Images are **immutable once generated** — the same `imageId` + params always yield the same output; therefore `immutable` may be appended to the header for versioned variants. |
-| IMG-016 | **Soft-delete and purge:** When a `MediaAsset` is deleted (soft-delete via `deletedAt`), the variant registry (`variants` JSONB) is cleared and a BullMQ job schedules physical deletion from object storage. Originals are retained for 30 days after `deletedAt`, then permanently deleted by a scheduled cleanup job. Variants are retained for 7 days before expiry. |
+| IMG-013 | Each unique combination of `(imageId, width, height, quality, format, crop, blur)` is translated into a single Cloudinary transformation URL. **Cloudinary generates and CDN-caches the derived asset on first request** — `media-service` does not fetch, transform, or re-store variants itself; it only builds the signed delivery URL and redirects (or streams) the client to Cloudinary's edge network. |
+| IMG-015 | **Cache-Control headers** returned by the transform endpoint: `Cache-Control: public, max-age=604800, stale-while-revalidate=86400` (7-day browser cache, 1-day stale-while-revalidate), mirroring Cloudinary's own CDN cache lifetime. Images are **immutable once generated** — the same `imageId` + params always yield the same output; therefore `immutable` may be appended to the header for versioned variants. |
+| IMG-016 | **Soft-delete and purge:** When a `MediaAsset` is deleted (soft-delete via `deletedAt`), `media-service` calls Cloudinary's Admin API `destroy()` on the original `public_id` with `invalidate: true`, purging the original and every CDN-cached derived variant in one call. The `MediaAsset` row (and its Cloudinary reference) is retained for 30 days after `deletedAt` for recovery, then a scheduled BullMQ cleanup job issues the Cloudinary destroy call if it hasn't already run. |
 
 ### 5.4 Announcements & Notifications
 
@@ -548,7 +549,7 @@ The phone number is the **primary user identifier** across all services. It must
 1. **Unique** — enforced at the database level.
 2. **Searchable** — system must locate a user by phone number.
 3. **Encrypted at rest** — raw phone number must never appear in database storage.
-4. **GDPR-erasable** — must be deletable without breaking referential integrity.
+4. **GDPR/DPDP-erasable** — must be deletable without breaking referential integrity.
 
 #### 7.1.2 Dual-Column Strategy
 
@@ -568,11 +569,11 @@ The phone number is the **primary user identifier** across all services. It must
   phone_hash (VARCHAR 64)    phone_encrypted (BYTEA)
   UNIQUE INDEX               No index
   Used for: lookup,          Used for: display, export,
-  deduplication              GDPR portability
+  deduplication              GDPR/DPDP portability
 ```
 
 - **`phone_hash`**: `HMAC-SHA256(normalised_phone, HMAC_SECRET)` — deterministic, allows `WHERE phone_hash = ?` queries. The raw phone is never recoverable from this column alone (one-way with secret).
-- **`phone_encrypted`**: `AES-256-GCM(normalised_phone, DEK, random_IV)` — reversible for display and GDPR export. IV stored prepended to ciphertext.
+- **`phone_encrypted`**: `AES-256-GCM(normalised_phone, DEK, random_IV)` — reversible for display and GDPR/DPDP export. IV stored prepended to ciphertext.
 - Both keys (`HMAC_SECRET`, `DEK`) are injected via **environment variables** and must never be committed to source control.
 
 #### 7.1.3 Phone Number Normalisation
@@ -808,9 +809,9 @@ export class TenantProfile {
   @Column({ type: 'text', nullable: true })
   emergencyContactPhoneEncrypted: string; // AES-256-GCM; optional
 
-  // ── Soft-delete / GDPR ───────────────────────────────────────────────────
+  // ── Soft-delete / GDPR / DPDP ────────────────────────────────────────────
   @Column({ type: 'timestamptz', nullable: true })
-  deletedAt: Date;                  // set on GDPR anonymisation run (90 days after tenancy ends)
+  deletedAt: Date;                  // set on GDPR/DPDP anonymisation run (90 days after tenancy ends)
 
   @OneToMany(() => FlatRental, (rental) => rental.tenantProfile)
   rentals: FlatRental[];
@@ -1042,7 +1043,7 @@ export class VisitorLog {
   createdAt: Date;
 
   @DeleteDateColumn()
-  deletedAt: Date; // soft delete for GDPR erasure
+  deletedAt: Date; // soft delete for GDPR/DPDP erasure
 }
 ```
 
@@ -1920,12 +1921,12 @@ export class EventMedia {
   @Column({ type: 'enum', enum: MediaType })
   mediaType: MediaType;             // PHOTO | VIDEO
 
-  // ── Object storage ────────────────────────────────────────────────────────
+  // ── Cloudinary ────────────────────────────────────────────────────────────
   @Column({ type: 'text' })
-  s3Key: string;                    // event-media/{societyId}/{eventId}/{mediaType}/{id}_{filename}
+  cloudinaryPublicId: string;       // event-media/{societyId}/{eventId}/{mediaType}/{id}
 
   @Column({ type: 'text', nullable: true })
-  thumbnailS3Key: string;           // Generated by Sharp (photo) or FFmpeg (video)
+  thumbnailUrl: string;             // Cloudinary eager-transform URL (480×480 photo crop / video poster frame)
 
   @Column({ type: 'varchar', length: 255 })
   originalFilename: string;
@@ -1945,7 +1946,7 @@ export class EventMedia {
 
   // ── Thumbnail processing ──────────────────────────────────────────────────
   @Column({ type: 'boolean', default: false })
-  thumbnailReady: boolean;          // Set to true by BullMQ thumbnail job
+  thumbnailReady: boolean;          // true once Cloudinary's eager transform completes (sync for photos; async webhook for video)
 
   // ── Audit ─────────────────────────────────────────────────────────────────
   @Column({ type: 'uuid' })
@@ -2009,10 +2010,13 @@ export class MediaAsset {
   @Column({ type: 'uuid', nullable: true })
   contextId: string;                 // e.g. facilityId, eventId, vendorId (nullable for unlinked)
 
-  // ── Original file metadata ─────────────────────────────────────────────
+  // ── Original file metadata (Cloudinary) ─────────────────────────────────
   @Column({ type: 'text' })
-  originalS3Key: string;             // originals/{societyId}/{contextType}/{id}.{ext}
+  cloudinaryPublicId: string;        // society-media-assets/{societyId}/{contextType}/{id}
                                      // Never exposed to clients
+
+  @Column({ type: 'text' })
+  cloudinarySecureUrl: string;       // Cloudinary secure delivery URL for the original — never exposed to clients directly
 
   @Column({ type: 'varchar', length: 50 })
   mimeType: string;                  // Original MIME: "image/jpeg" | "image/png" | "image/webp" | "image/gif"
@@ -2021,7 +2025,7 @@ export class MediaAsset {
   originalFormat: string;            // "jpeg" | "png" | "webp" | "gif"
 
   @Column({ type: 'int' })
-  originalWidth: number;             // Pixels — extracted by Sharp on confirm
+  originalWidth: number;             // Pixels — returned directly by Cloudinary's upload response
 
   @Column({ type: 'int' })
   originalHeight: number;            // Pixels
@@ -2029,22 +2033,12 @@ export class MediaAsset {
   @Column({ type: 'int' })
   fileSizeBytes: number;             // Original file size
 
-  // ── Variant cache registry ─────────────────────────────────────────────
-  /**
-   * JSONB map: paramsHash → { s3Key, width, height, quality, format, fileSizeBytes, cachedAt }
-   * Written by media-service on first transform request for each unique param set.
-   * Serves as a local index for cache management and invalidation.
-   */
-  @Column({ type: 'jsonb', default: '{}' })
-  variants: Record<string, {
-    s3Key:          string;
-    width:          number | null;
-    height:         number | null;
-    quality:        number;
-    format:         string;
-    fileSizeBytes:  number;
-    cachedAt:       string;          // ISO timestamp
-  }>;
+  @Column({ type: 'jsonb', nullable: true })
+  exif: Record<string, string> | null; // EXIF tags from Cloudinary (image_metadata: true); GPS tags stripped for privacy
+
+  // ── Variant caching ──────────────────────────────────────────────────────
+  // No local registry needed: Cloudinary's CDN caches every derived
+  // transformation (resize/format/quality/blur) automatically. See §5.12.3.
 
   // ── Status & lifecycle ─────────────────────────────────────────────────
   @Column({ type: 'enum', enum: MediaAssetStatus, default: MediaAssetStatus.ACTIVE })
@@ -2373,7 +2367,7 @@ Rental endpoints live in `owner-service`. Access is gated by ownership check (`f
 | `GET` | `/flats/:flatId/rentals` | Owner (own flat) / Admin | List all tenancies for a flat (current + historical); phone/PAN masked for Owner callers |
 | `GET` | `/rentals/:id` | Owner (own flat) / Admin | Get single tenancy details; includes document metadata (no download URL yet) |
 | `PATCH` | `/rentals/:id` | Owner (own flat) / Admin | Update tenancy fields (dates, rent amount, tenant details); triggers re-encryption if phone/PAN changed |
-| `PATCH` | `/rentals/:id/end` | Owner (own flat) / Admin | End active tenancy; flat → `VACANT`; tenant profile scheduled for GDPR anonymisation |
+| `PATCH` | `/rentals/:id/end` | Owner (own flat) / Admin | End active tenancy; flat → `VACANT`; tenant profile scheduled for GDPR/DPDP anonymisation |
 | `POST` | `/rentals/:id/documents/upload-url` | Owner (own flat) / Admin | Request pre-signed upload URL for a document (type: `RENT_AGREEMENT` \| `PAN_CARD`); returns `{ uploadUrl, objectKey, expiresIn: 900 }` |
 | `POST` | `/rentals/:id/documents/confirm` | Owner (own flat) / Admin | Confirm successful upload; creates `RentalDocument` record; supersedes previous version |
 | `GET` | `/rentals/:id/documents/:docId/download-url` | Owner (own flat) / Admin | Issue pre-signed download URL (1-hour expiry) for a specific document version |
@@ -2596,14 +2590,14 @@ Owner publishes event
 
 ### 8.3.6 Common Image Media Service (`/media`)
 
-The `media-service` is a **standalone NestJS microservice** exposed through the API Gateway at the `/media` prefix. It is the sole service authorised to read original objects from object storage and write transform variants. All other services call it via internal REST for image metadata; they never access the storage bucket directly.
+The `media-service` is a **standalone NestJS microservice** exposed through the API Gateway at the `/media` prefix. It is the sole service authorised to hold Cloudinary API credentials and call Cloudinary's upload/admin APIs. All other services call it via internal REST for image metadata; they never talk to Cloudinary directly.
 
 #### Upload Endpoints
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/media/images/upload-url` | Any authenticated user | Request a pre-signed upload URL; returns `{ imageId, uploadUrl, fields, expiresIn: 900 }`; validates `mimeType` and `fileSizeBytes` before issuing URL |
-| `POST` | `/media/images/confirm` | Any authenticated user | Confirm upload completed; `media-service` reads image via Sharp to extract dimensions and format; creates `MediaAsset` record; returns full `MediaAssetDto` |
+| `POST` | `/media/images/upload-url` | Any authenticated user | Request a signed Cloudinary upload payload; returns `{ imageId, cloudName, apiKey, timestamp, signature, folder, expiresIn: 900 }`; validates `mimeType` and `fileSizeBytes` before signing |
+| `POST` | `/media/images/confirm` | Any authenticated user | Confirm upload completed; client passes the Cloudinary `public_id` returned by the upload; `media-service` reads dimensions, format, and EXIF directly from Cloudinary's response; creates `MediaAsset` record; returns full `MediaAssetDto` |
 | `DELETE` | `/media/images/:imageId` | Uploader (own) \| Admin | Soft-delete asset; clears variant registry; queues BullMQ job to purge stored objects after 30 days |
 | `GET` | `/media/images/:imageId/meta` | Any authenticated user | Return asset metadata (dimensions, format, `contextType`, `contextId`, upload timestamp) without serving image bytes |
 
@@ -2664,32 +2658,29 @@ Client (Mobile / Web)
         ├── 1. Look up MediaAsset by imageId (DB / Redis cache)
         │       └── 404 if not found or status = DELETED
         │
-        ├── 2. Compute paramsHash = SHA-256(canonical sorted query)
+        ├── 2. Map query params → Cloudinary transformation string
+        │       (w_, h_, c_fill|c_fit, g_auto, q_<n>|q_auto, f_<fmt>|f_auto, e_blur:<n*100>)
         │
-        ├── 3. Check variants[paramsHash] in MediaAsset record
-        │       ├──[Variant exists in storage]──► stream variant → Client
-        │       │
-        │       └──[Variant not cached]
-        │               │
-        │               ├── 4. Fetch original from object storage (originals/…)
-        │               ├── 5. Apply Sharp transform (resize → format → quality → blur)
-        │               ├── 6. Upload variant to object storage (variants/…)
-        │               ├── 7. Update MediaAsset.variants JSONB
-        │               └── 8. Stream result → Client
+        ├── 3. Build signed Cloudinary delivery URL:
+        │       https://res.cloudinary.com/{cloudName}/image/upload/{transform}/{publicId}
         │
-        └── Response headers:
-            Content-Type: image/webp (or requested format)
+        └── 4. 302 redirect (or stream-proxy) the client to the Cloudinary CDN.
+            Cloudinary generates and edge-caches the derived asset on first
+            request; every subsequent request for the same transform is
+            served from Cloudinary's cache — media-service holds no variant
+            state of its own.
+
+        Response headers:
             Cache-Control: public, max-age=604800, stale-while-revalidate=86400
             X-Image-Id: 3f2a8c1d-…
-            X-Variant-Cache: HIT | MISS
 ```
 
 #### Admin Cache Endpoints
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/media/images/:imageId/invalidate` | Admin \| Super Admin | Clear `variants` JSONB in DB so next request regenerates all variants; useful after re-upload |
-| `GET` | `/media/admin/stats` | Super Admin | Returns aggregate storage stats: total `MediaAsset` count, total original size (GB), total variant size (GB), variant cache hit rate (from `X-Variant-Cache` header logs) |
+| `POST` | `/media/images/:imageId/invalidate` | Admin \| Super Admin | Calls Cloudinary's `rename`/`destroy` with `invalidate: true` to purge all CDN-cached derived variants for the asset; useful after re-upload |
+| `GET` | `/media/admin/stats` | Super Admin | Returns aggregate stats pulled from Cloudinary's Admin API usage endpoint (storage, bandwidth, transformation counts) merged with local `MediaAsset` counts |
 
 ---
 
@@ -2727,7 +2718,7 @@ Incoming request: POST /owner/maintenance-requests
 ### 8.6 Inter-Service Communication
 
 - **Synchronous:** REST over the internal Docker network (or gRPC for high-frequency calls like OTP validation).
-- **Asynchronous:** **BullMQ** (Redis-backed) for notifications, invoice generation, email dispatch, GDPR erasure jobs, and PDF audit report generation.
+- **Asynchronous:** **BullMQ** (Redis-backed) for notifications, invoice generation, email dispatch, GDPR/DPDP erasure jobs, and PDF audit report generation.
 - **Event Bus:** All domain events (visitor entry, payment success, maintenance status change) published to BullMQ queues; consuming services subscribe to relevant queues.
 
 #### BullMQ Queue Reference (Audit & PDF Jobs)
@@ -2746,7 +2737,7 @@ All jobs are configured with:
 
 ---
 
-## 9. Security & GDPR Compliance
+## 9. Security, GDPR & DPDP Compliance
 
 ### 9.1 Security Architecture
 
@@ -2758,21 +2749,25 @@ All jobs are configured with:
 | Data at rest | Phone fields: AES-256-GCM; database volume: AES-256 (cloud provider disk encryption) |
 | Secrets | Environment variables only; never committed to source control; use platform secret injection in production |
 | Logging | PII fields (phone, name, address) redacted from all application logs |
-| Dependency scanning | Snyk + `npm audit` in CI pipeline |
-| SAST | SonarQube on every PR |
+| Dependency scanning | `npm audit --audit-level=high` in CI pipeline (free, built-in) |
+| SAST | GitHub CodeQL (free for public repos, built into GitHub Actions) |
 | Penetration testing | Annual third-party pentest + quarterly DAST scans |
 
-### 9.2 GDPR Compliance Measures
+### 9.2 GDPR & DPDP Compliance Measures
+
+Applies to both the EU **General Data Protection Regulation (GDPR)** and India's **Digital Personal Data Protection Act, 2023 (DPDP Act)**. Where terminology differs, the DPDP equivalent is noted — the society acts as **Data Fiduciary** (GDPR: Data Controller) and residents/visitors are **Data Principals** (GDPR: Data Subjects).
 
 | Requirement | Implementation |
 |---|---|
-| **Lawful basis** | Legitimate interest for security logging; consent for photos and marketing |
+| **Lawful basis** (GDPR) / **Notice & consent** (DPDP) | Legitimate interest for security logging; explicit consent for photos and marketing, captured via the `gdpr_consent` flag ahead of any processing |
 | **Data minimisation** | Visitor phone collected only when owner approval flow requires it |
 | **Right of access** | Owner can download all data linked to their account (JSON export) |
-| **Right to erasure** | GDPR erasure job: anonymises name, nullifies encrypted phone, deletes photo; `deleted_at` set; referential integrity preserved via UUID |
+| **Right to erasure** | GDPR/DPDP erasure job: anonymises name, nullifies encrypted phone, deletes photo; `deleted_at` set; referential integrity preserved via UUID |
 | **Right to portability** | Structured JSON export with decrypted fields; requires dual-admin approval for visitor logs |
-| **Consent records** | Photo consent stored per visitor log entry; consent withdrawal disables retroactive photo display |
+| **Consent records** | Photo consent stored per visitor log entry (`gdpr_consent` column, doubles as DPDP consent record); consent withdrawal disables retroactive photo display |
 | **Data retention** | Visitor logs retained 90 days (configurable per society/region); financial records retained 7 years (legal obligation) |
+| **Grievance Redressal** (DPDP-specific) | DPDP Act mandates a named Grievance Officer and a response SLA for Data Principal complaints; Society Admin is designated as the first point of contact, escalating to the platform operator |
+| **Significant Data Fiduciary obligations** (DPDP-specific) | Not currently applicable — reassess if user-volume thresholds notified by the Data Protection Board of India are crossed |
 | **Breach notification** | Incident response runbook; DPA notification within 72 h of discovery |
 | **Privacy by design** | Phone number never logged; analytics pipeline receives only anonymised IDs |
 
@@ -2845,21 +2840,24 @@ export class PhoneCryptoService {
 | **Node.js Runtime** | **Node.js** (minimum LTS for all backend services) | **22.x** |
 | Backend Framework | NestJS | 10.x |
 | ORM | TypeORM | 0.3.x |
-| Database | PostgreSQL | 16 |
-| Cache / Queue | Redis (via Upstash in dev) | 7.x |
+| Database | PostgreSQL via **Neon** (free serverless, 0.5 GB storage, branching) | 16 |
+| Cache / Queue | Redis + BullMQ via **Upstash** (free tier: 10,000 req/day, 256 MB) | 7.x |
 | Job Queue | BullMQ | 5.x |
 | **PDF Generation** | **Puppeteer** (headless Chromium, HTML→PDF) | **22.x** |
 | **Admin Panel** | **AdminJS** (`adminjs`) — auto-generated React admin UI | **7.x** |
 | **AdminJS NestJS** | `@adminjs/nestjs` — NestJS module adapter | **7.x** |
 | **AdminJS TypeORM** | `@adminjs/typeorm` — TypeORM resource adapter | **7.x** |
 | Monorepo | Lerna + Nx (optional plugins) | Lerna 8.x |
-| Container Runtime | Docker | 25.x |
-| CI/CD | GitHub Actions | — |
+| Container Runtime | Docker (local dev) | 25.x |
+| CI/CD | GitHub Actions — free for public repos (2,000 min/month) | — |
 | Secret Management | Environment variables (`.env`; never committed) | — |
-| Object Storage | S3-compatible (AWS S3 by default; swappable with MinIO / LocalStack in dev) | — |
-| **Image Processing** | **Sharp** (Node.js libvips binding) — on-demand resize, quality, format conversion | **0.33.x** |
-| **Media Service** | Dedicated NestJS microservice (`media-service`) — handles upload, unique ID generation, on-demand transform, and variant caching for all image assets across the platform | — |
-| Push Notifications | Firebase Cloud Messaging (FCM) | — |
+| Object Storage | **Cloudflare R2** (free: 10 GB + 1M Class-A ops/month; S3-compatible API, zero egress fees) — non-media documents: audit reports, rental/vendor documents | — |
+| Local Dev Storage | MinIO via Docker Compose — drop-in S3-compatible replacement for local dev (non-media documents only) | — |
+| Service Hosting | **Railway** ($5 free credit/month) or **Render** (free tier, sleeps after 15 min) | — |
+| Web App Hosting | **Vercel** (free hobby tier, unlimited Next.js deployments) | — |
+| **Media Hosting** | **Cloudinary** — upload, responsive transforms, LQIP, auto EXIF extraction/orientation correction, unified image + video CDN (free tier: 25 credits/month) | — |
+| **Media Service** | Dedicated NestJS microservice (`media-service`) — handles upload signing, unique ID generation, and Cloudinary-backed transform/delivery for all image and video assets across the platform | — |
+| Push Notifications | Firebase Cloud Messaging (FCM) — **permanently free**, no daily limits | — |
 | Monitoring | Structured JSON logs; optional OpenTelemetry exporter | — |
 
 ### 10.2 Cross-Platform App Architecture
@@ -3118,11 +3116,11 @@ alankapuri-my-society/                  ← git root
 ├── jsconfig.json                       ← IDE support for root-level JS files
 ├── eslint.config.mjs                   ← ★ ESLint 9 flat config (TS · React · RN · NestJS · Prettier)
 ├── .prettierrc.json                    ← Prettier rules (singleQuote · no semi · 100-col · lf)
-├── sonar-project.properties            ← SonarCloud SAST configuration
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                      ← CI pipeline (lint → type-check → test → SonarCloud → Snyk)
-│       └── deploy.yml                  ← Deploy on merge to main (CD — planned)
+│       ├── ci.yml                      ← CI pipeline (lint → type-check → test → npm audit → CodeQL)
+│       ├── codeql.yml                  ← GitHub CodeQL SAST (free for public repos)
+│       └── deploy.yml                  ← Deploy on merge to main (Railway / Vercel)
 │
 ├── applications/
 │   ├── owner-app/
@@ -3218,10 +3216,10 @@ alankapuri-my-society/                  ← git root
 │   │   │   │   │   ├── create-event.dto.ts
 │   │   │   │   │   ├── update-event.dto.ts
 │   │   │   │   │   └── confirm-media.dto.ts
-│   │   │   │   ├── storage/
-│   │   │   │   │   └── event-media-storage.service.ts  ← Pre-signed PUT/GET, key builder
+│   │   │   │   ├── cloudinary/
+│   │   │   │   │   └── event-media-cloudinary.service.ts  ← Signed upload payload + delivery URL builder
 │   │   │   │   └── processors/
-│   │   │   │       ├── thumbnail.processor.ts     ← BullMQ: Sharp (photo) / FFmpeg (video)
+│   │   │   │       ├── thumbnail-ready.processor.ts ← BullMQ: handles Cloudinary eager_async webhook, sets thumbnailReady
 │   │   │   │       ├── event-status.processor.ts  ← BullMQ: UPCOMING→ONGOING→COMPLETED
 │   │   │   │       └── event-notify.processor.ts  ← BullMQ: publish notify, cancel notify, reminder
 │   │   │   ├── reports/                ← Owner annual statement PDF generation
@@ -3391,35 +3389,34 @@ alankapuri-my-society/                  ← git root
 │
 │   ── media-service/                   ← NestJS; Common Image Media Service
 │       ├── src/
-│       │   ├── upload/                 ← Pre-signed PUT URL generation + confirm flow
+│       │   ├── cloudinary/             ← Thin wrapper around the Cloudinary Node SDK
+│       │   │   ├── cloudinary.module.ts
+│       │   │   └── cloudinary.service.ts    ← Signs uploads, builds transformation URLs, calls Admin API
+│       │   │
+│       │   ├── upload/                 ← Signed upload payload generation + confirm flow
 │       │   │   ├── upload.module.ts
 │       │   │   ├── upload.controller.ts   ← POST /media/images/upload-url, /confirm
-│       │   │   ├── upload.service.ts
+│       │   │   ├── upload.service.ts        ← Calls cloudinary.service for signing + confirm metadata
 │       │   │   └── dto/
 │       │   │       ├── request-upload-url.dto.ts  ← contextType, mimeType, fileSizeBytes
 │       │   │       └── confirm-upload.dto.ts
 │       │   │
-│       │   ├── transform/              ← On-demand image transform via Sharp
-│       │   │   ├── transform.module.ts
-│       │   │   ├── transform.controller.ts  ← GET /media/images/:imageId (with query params)
-│       │   │   ├── transform.service.ts     ← Param parse → cache check → Sharp → storage write
-│       │   │   ├── presets.ts               ← Named size preset definitions (thumbnail/small/…)
-│       │   │   └── params-hash.util.ts      ← SHA-256 of canonical sorted query string
-│       │   │
-│       │   ├── cache/                  ← Variant registry management
-│       │   │   ├── cache.module.ts
-│       │   │   └── cache.service.ts         ← Read/write MediaAsset.variants JSONB
+│       │   ├── delivery/               ← On-demand delivery URL building (no local transform)
+│       │   │   ├── delivery.module.ts
+│       │   │   ├── delivery.controller.ts  ← GET /media/images/:imageId (redirects to Cloudinary)
+│       │   │   ├── delivery.service.ts     ← Param parse → Cloudinary transformation string → signed URL
+│       │   │   └── presets.ts               ← Named size preset definitions (thumbnail/small/…)
 │       │   │
 │       │   ├── entities/
 │       │   │   └── media-asset.entity.ts    ← MediaAsset TypeORM entity (7.2.17)
 │       │   │
-│       │   ├── admin/                  ← Admin stats + manual invalidation
+│       │   ├── admin/                  ← Admin stats + manual CDN invalidation
 │       │   │   ├── admin.module.ts
 │       │   │   ├── admin.controller.ts  ← POST /invalidate, GET /stats
-│       │   │   └── admin.service.ts
+│       │   │   └── admin.service.ts         ← Calls Cloudinary Admin API
 │       │   │
 │       │   ├── processors/
-│       │   │   └── delete-purge.processor.ts  ← BullMQ: storage variant + original purge on soft-delete
+│       │   │   └── delete-purge.processor.ts  ← BullMQ: Cloudinary destroy() on soft-delete purge
 │       │   │
 │       │   └── main.ts
 │       ├── Dockerfile
@@ -3753,24 +3750,40 @@ Each web app's `tailwind.config.ts` sets `content` paths covering its own `src/`
 
 ### 12.1 Infrastructure Overview
 
-For v1.0.0, all services are packaged as Docker containers and deployed on a standard VPS or managed container platform (e.g. Railway, Render, or a single cloud VM with Docker Compose). No managed Kubernetes cluster or AWS-specific infrastructure is required.
+For v1.0.0, all services are packaged as Docker containers and deployed on **Railway** ($5 free credit/month) or **Render** (free tier). Next.js web apps are deployed on **Vercel** (free hobby tier). No managed Kubernetes cluster or AWS-specific infrastructure is required.
+
+**Hosted free-tier topology (hobby/staging):**
 
 ```
 Internet
    │
    ▼
-DNS (any provider)
+Vercel (Next.js web apps — owner, admin, super-admin)
    │
    ▼
-Reverse Proxy — nginx (TLS 1.3 termination, rate limiting)
+Railway / Render (NestJS services — auto-TLS via platform)
    │
    ├── api-gateway        (NestJS, port 3000)
    ├── owner-service      (NestJS TCP, internal only)
    ├── admin-service      (NestJS TCP, internal only)
    ├── super-admin-svc    (NestJS TCP, internal only)
-   ├── media-service      (NestJS TCP, internal only)
-   ├── redis              (BullMQ queues + session cache)
-   └── postgresql-16      (primary database)
+   └── media-service      (NestJS TCP, internal only)
+
+External free-tier services:
+   ├── Neon               (serverless PostgreSQL — DATABASE_URL)
+   ├── Upstash Redis      (BullMQ queues + session cache — REDIS_URL)
+   ├── Cloudflare R2      (non-media object storage — S3_ENDPOINT / S3_BUCKET_*)
+   └── Cloudinary         (images + video — upload, LQIP, responsive transforms, EXIF — CLOUDINARY_URL)
+```
+
+**Local development topology:**
+
+```
+Docker Compose
+   ├── api-gateway / owner-service / admin-service / super-admin-service / media-service
+   ├── redis:7-alpine     (local BullMQ + session)
+   ├── postgres:16-alpine (local database)
+   └── minio              (local S3-compatible object storage — drop-in for R2)
 ```
 
 Each service reads all secrets from environment variables injected at container start (`.env` file or platform secret store). No managed secrets service is required.
@@ -3819,14 +3832,15 @@ PR opened / push to main|develop
   ├── lint        (ESLint + Prettier)          — nx affected, parallel=5, Nx cache
   ├── type-check  (tsc --noEmit)               — nx affected, parallel=5, Nx cache
   ├── test        (Jest, with coverage)        — nx affected, parallel=5, Nx cache
-  ├── sast        (SonarCloud)                 — runs after lint+type-check+test; consumes coverage artefacts
-  └── snyk        (Snyk + npm audit)           — all workspace packages, severity-threshold=high
+  ├── audit       (npm audit --audit-level=high) — free, built-in dependency scanning
+  └── codeql      (GitHub CodeQL)              — free SAST for public repos, built into GitHub Actions
 
 Merge to main
   │
   ├── Build Docker images (multi-stage; layer caching)
   ├── Push to container registry (tagged with git SHA)
-  ├── Deploy updated containers to hosting environment
+  ├── Deploy updated services to Railway / Render
+  ├── Deploy Next.js apps to Vercel (auto-triggered via Vercel GitHub integration)
   └── Smoke tests (k6 script against staging)
 ```
 
@@ -3837,8 +3851,8 @@ Merge to main
 | `lint` | `ubuntu-latest` | `nx affected --target=lint` | `.nx/cache` restored from `actions/cache` |
 | `type-check` | `ubuntu-latest` | `nx affected --target=type-check` | `.nx/cache` restored from `actions/cache` |
 | `test` | `ubuntu-latest` | `nx affected --target=test`; coverage uploaded as `coverage-reports` artefact | `.nx/cache` restored from `actions/cache` |
-| `sast` | `ubuntu-latest` | `SonarSource/sonarcloud-github-action@v3`; downloads coverage artefact | — |
-| `snyk` | `ubuntu-latest` | `snyk/actions/node@master --all-projects`; `npm audit --audit-level=high` | — |
+| `audit` | `ubuntu-latest` | `npm audit --audit-level=high` across all workspace packages — **free, no token required** | — |
+| `codeql` | `ubuntu-latest` | `github/codeql-action` (TypeScript analysis) — **free for public repos**, no external service needed | — |
 
 **Affected-package base ref logic:**
 - **PR events** → `origin/<base_ref>` (the PR target branch)
@@ -3850,21 +3864,29 @@ This ensures only the packages touched by each PR or commit are linted, type-che
 
 | Secret | Used by | How to obtain |
 |---|---|---|
-| `GITHUB_TOKEN` | `sast` | Automatically provided by GitHub Actions — no setup needed |
-| `SONAR_TOKEN` | `sast` | SonarCloud → My Account → Security → Generate token |
-| `SNYK_TOKEN` | `snyk` | Snyk dashboard → Account Settings → API token |
-| `SNYK_ORG_ID` | `snyk` | Snyk dashboard → Settings → Organisation ID |
+| `GITHUB_TOKEN` | `codeql`, all jobs | Automatically provided by GitHub Actions — no setup needed |
 
-#### SonarCloud configuration — `sonar-project.properties`
+> All CI jobs (`lint`, `type-check`, `test`, `audit`, `codeql`) run entirely with the auto-provided `GITHUB_TOKEN`. No paid external service tokens are required for a hobby project.
 
-The root `sonar-project.properties` file configures the SonarCloud scan. Replace the placeholder values with your SonarCloud organisation slug and project key before the first CI run:
+#### CodeQL configuration — `.github/workflows/codeql.yml`
 
-```properties
-sonar.organization=<YOUR_SONAR_ORG>
-sonar.projectKey=<YOUR_SONAR_PROJECT_KEY>
-sonar.sources=applications,backend,packages
-sonar.javascript.lcov.reportPaths=coverage-reports/**/lcov.info
-sonar.typescript.tsconfigPaths=tsconfig.base.json
+GitHub CodeQL is enabled by adding the `github/codeql-action` workflow. It performs SAST on TypeScript across all packages automatically:
+
+```yaml
+# .github/workflows/codeql.yml
+name: CodeQL
+on: [push, pull_request]
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: typescript
+      - uses: github/codeql-action/analyze@v3
 ```
 
 ### 12.4 Multi-Tenancy & Data Isolation
@@ -3907,11 +3929,12 @@ sonar.typescript.tsconfigPaths=tsconfig.base.json
 | **Autopay** | Razorpay's UPI recurring mandate product for automated monthly debits |
 | **Blackout Period** | An admin-defined date-time range during which a `CommonFacility` is unavailable for booking (e.g. annual maintenance, society events); stored in `FacilityBlackout` entity; displayed as blocked slots on the owner-facing availability calendar |
 | **BookingStatus** | Lifecycle enum for a `FacilityBooking` record: `PENDING_APPROVAL → APPROVED → CONFIRMED` (payment captured) or `REJECTED`; a `CONFIRMED` booking can transition to `CANCELLED` |
+| **Cloudinary** | Managed media platform used for all image and video upload, storage, and on-the-fly transformation (resize, format, quality, blur/LQIP) across the platform; replaces self-hosted Sharp/FFmpeg processing. Auto-extracts EXIF metadata and corrects orientation on upload; delivery via signed, CDN-cached URLs |
 | **Collection Efficiency** | Ratio of maintenance actually collected to total maintenance billed in a period; expressed as a percentage in the audit report's executive summary |
 | **DEK** | Data Encryption Key — the symmetric AES-256 key used to encrypt phone and PAN fields; injected via environment variable |
 | **Design Token** | A named value (colour, spacing, radius, etc.) defined once in `shared-ui-tokens` and consumed by both Tailwind CSS (web) and NativeWind (mobile) |
 | **E.164** | International telephone number format (e.g. `+919876543210`) |
-| **EventMedia** | A photo or video uploaded to a `SocietyEvent`; stored in the `society-event-media` private storage bucket with server-side encryption; served exclusively via pre-signed download URLs; thumbnails auto-generated by Sharp (photos) or FFmpeg (videos) |
+| **EventMedia** | A photo or video uploaded to a `SocietyEvent`; uploaded to **Cloudinary** under the `authenticated` delivery type; served exclusively via Cloudinary signed delivery URLs; thumbnails generated by Cloudinary eager transforms (resize for photos, auto poster-frame extraction for videos) |
 | **EventRsvp** | A record confirming that a flat owner intends to attend a `SocietyEvent`; enforces `maxParticipants` cap; cancellable before `startDatetime` |
 | **EventStatus** | Lifecycle enum for a `SocietyEvent`: `DRAFT → UPCOMING → ONGOING → COMPLETED` (auto-transitioned by BullMQ jobs) or `CANCELLED` (organiser/admin) or `REMOVED` (admin moderation) |
 | **Facility** | A bookable common amenity within a society — e.g. Clubhouse, Swimming Pool, Gym, Terrace Garden; registered by an Admin as a `CommonFacility` record with capacity, pricing model, and photos |
@@ -3921,17 +3944,18 @@ sonar.typescript.tsconfigPaths=tsconfig.base.json
 | **Fund Account** | A Razorpay object (prefix `fa_`) that represents a beneficiary's bank account or VPA registered under a Contact; used for payouts and account validation |
 | **Fund Account Validation** | A Razorpay API call (`POST /v1/fund_accounts/validations`) that verifies whether a registered fund account (bank account or VPA) is live and correctly owned; can use Standard Penny Drop or Reverse Penny Drop |
 | **GDPR** | General Data Protection Regulation — EU data privacy law |
+| **DPDP** | Digital Personal Data Protection Act, 2023 — India's data privacy law (Ministry of Electronics & IT, Government of India); governs "Data Fiduciaries" and "Data Principals" analogously to GDPR's "Controllers" and "Data Subjects" |
 | **HMAC-SHA256** | Hash-based Message Authentication Code using SHA-256 — used for deterministic phone hashing and Razorpay signature verification |
 | **IFSC** | Indian Financial System Code — an 11-character alphanumeric code that uniquely identifies a bank branch in India; used to route NEFT/RTGS/IMPS transactions |
-| **Image ID** | A globally unique `UUIDv4` string assigned by the `media-service` to every uploaded image; the only identifier exposed to client applications. All transform URLs are constructed as `/media/images/{imageId}?params`. The underlying object storage key is never shared externally |
-| **ImageVariant** | A transformed, cached copy of an original image produced by applying a specific combination of `width`, `height`, `quality`, `format`, `crop`, and `blur` parameters via Sharp; stored in object storage under `variants/…/{paramsHash}.{format}` and streamed to the client on subsequent requests |
+| **Image ID** | A globally unique `UUIDv4` string assigned by the `media-service` to every uploaded image; the only identifier exposed to client applications. All transform URLs are constructed as `/media/images/{imageId}?params`. The underlying Cloudinary `public_id` is never shared externally |
+| **ImageVariant** | A derived copy of an original image produced by applying a specific combination of `width`, `height`, `quality`, `format`, `crop`, and `blur` parameters via Cloudinary's URL-based transformation API; Cloudinary generates and CDN-caches each derived asset on first request — no local storage or hashing required |
 | **Inflow** | Any money received into the society's account (maintenance, late fees, levies, deposits, penalties) — one of the two directions of a transaction in the audit ledger |
 | **IV** | Initialisation Vector — random value used in AES-GCM to ensure ciphertext uniqueness |
 | **Journal Entry** | An Admin-recorded offline financial event (e.g. a vendor payment or deposit refund) that is not processed through Razorpay but is logged in the platform for audit completeness |
 | **Ledger** | The complete ordered record of all financial inflows and outflows for a society; forms the transaction-level appendix (Section E) of the Annual Audit Report PDF |
 | **Lerna** | JavaScript/TypeScript monorepo management tool |
-| **LQIP** | Low-Quality Image Placeholder — a tiny, heavily-blurred preview image (e.g. `width=40&blur=10&quality=30`) fetched before the full-resolution image loads; enables progressive loading on slow mobile networks |
-| **MediaAsset** | A TypeORM entity (table `media_assets`) that is the authoritative registry for every image uploaded through the `media-service`; stores the original object key, dimensions, MIME type, context tag, society scope, and a JSONB map of all generated `ImageVariant` objects |
+| **LQIP** | Low-Quality Image Placeholder — a tiny, heavily-blurred preview image (e.g. `width=40&blur=10&quality=30`, generated via Cloudinary's `e_blur` transformation) fetched before the full-resolution image loads; enables progressive loading on slow mobile networks |
+| **MediaAsset** | A TypeORM entity (table `media_assets`) that is the authoritative registry for every image uploaded through the `media-service`; stores the Cloudinary `public_id`, dimensions, MIME type, context tag, society scope, and extracted EXIF metadata |
 | **Multi-tenant** | Single deployment serving multiple distinct societies with data isolation |
 | **NativeWind** | Library that brings Tailwind CSS utility classes to React Native via a Babel/Metro plugin that transforms class strings into React Native `StyleSheet` objects at build time |
 | **Oat UI** | Ultra-lightweight, zero-dependency HTML/CSS/JS UI library (`@knadh/oat`, ~8 KB min+gz) that styles semantic HTML elements automatically; used in all Next.js + React web dashboards |
@@ -3959,12 +3983,11 @@ sonar.typescript.tsconfigPaths=tsconfig.base.json
 | **RPAY_KEY_SECRET** | Razorpay private key used server-side for order creation and signature verification — never exposed to clients |
 | **RTO** | Recovery Time Objective — maximum acceptable downtime |
 | **SHA-256** | Secure Hash Algorithm producing a 256-bit digest; used to compute the tamper-detection checksum of every generated audit PDF |
-| **Sharp** | High-performance Node.js image processing library (built on libvips); used by `media-service` to resize images, convert formats (JPEG → WebP, PNG → WebP, etc.), apply quality compression, centre-crop, and generate Gaussian blurs for LQIP placeholders — all on-demand without pre-generating variants |
 | **SocietyEvent** | A community event created by a flat owner or Admin (e.g. festival, tournament, movie night); discoverable by all owners in the same society via the event feed; may be linked to a `FacilityBooking` for a venue; supports RSVP, media uploads, and Admin pinning |
 | **Tailwind CSS** | Utility-first CSS framework; used directly in Next.js + React web dashboards and via NativeWind in React Native mobile apps |
 | **TOTP** | Time-based One-Time Password (e.g. Google Authenticator) — used for Super Admin 2FA |
 | **Tenancy** | A period during which a flat is rented out to a tenant; modelled as a `FlatRental` record linking a `Flat`, a `TenantProfile`, an owner, rental terms, and associated documents |
-| **Thumbnail** | A reduced-resolution preview image generated from an uploaded photo (480×480 px WebP via Sharp) or video (frame at 1-second mark via FFmpeg); stored in object storage alongside the original; used in event feed cards and gallery grids |
+| **Thumbnail** | A reduced-resolution preview image generated by a Cloudinary eager transform on upload (480×480 px WebP crop for photos; auto-extracted poster frame for videos); served from Cloudinary's CDN alongside the original; used in event feed cards and gallery grids |
 | **Vendor** | A company or individual registered by the society committee as an empanelled service provider (e.g. plumber, electrician, pest-control firm); stored in `VendorProfile` with encrypted phone and optional supporting documents |
 | **VendorDocument** | A supporting document uploaded against a `VendorProfile` (GST Certificate, Trade Licence, ID Proof, Insurance Certificate); stored AES-256-GCM encrypted in the `society-vendor-documents` private storage bucket |
 | **VendorPhoneRevealLog** | An audit record created each time an owner uses the "Reveal Phone" feature on a vendor listing; captures `ownerId`, `vendorId`, `ipAddress`, and `revealedAt` for security monitoring |
@@ -4004,15 +4027,17 @@ All financial transactions in the platform are processed through **Razorpay**, I
 ```
 # .env — never committed to source control; injected via platform secret store or CI/CD environment
 
-# Razorpay Credentials
-RAZORPAY_KEY_ID=rzp_live_XXXXXXXXXXXX          # Public; sent to client SDK
+# Razorpay Credentials — Test mode (FREE; use for all development and hobby/staging)
+# Sign up at razorpay.com — test mode is completely free with no transaction fees.
+# Use Razorpay's provided test VPAs and card numbers for UPI and card flow testing.
+RAZORPAY_KEY_ID=rzp_test_XXXXXXXXXXXX          # Public rzp_test_* key; sent to client SDK
 RAZORPAY_KEY_SECRET=XXXXXXXXXXXXXXXXXXXXXXXX    # Private; server-side only
 RAZORPAY_WEBHOOK_SECRET=XXXXXXXXXXXXXXXXXXXXXXX # For webhook HMAC verification
 
-# Test mode (non-production environments)
-RAZORPAY_KEY_ID=rzp_test_XXXXXXXXXXXX
-RAZORPAY_KEY_SECRET=XXXXXXXXXXXXXXXXXXXXXXXX
-RAZORPAY_WEBHOOK_SECRET=XXXXXXXXXXXXXXXXXXXXXXX
+# Production mode (live payments — ~2% per transaction, unavoidable for live India payments)
+# RAZORPAY_KEY_ID=rzp_live_XXXXXXXXXXXX
+# RAZORPAY_KEY_SECRET=XXXXXXXXXXXXXXXXXXXXXXXX
+# RAZORPAY_WEBHOOK_SECRET=XXXXXXXXXXXXXXXXXXXXXXX
 ```
 
 - Credentials are read at service start-up from **environment variables** via `@nestjs/config`; they are never hard-coded or committed to source control.
@@ -4778,7 +4803,7 @@ Each panel exposes a different scope of TypeORM entities, enforced via AdminJS's
 | Resource | Allowed Actions | Notes |
 |---|---|---|
 | **Society** | List, Show, Create, Edit, Delete | Full CRUD; can disable/suspend a society |
-| **User** | List, Show, Edit | No Delete (GDPR soft-delete via custom action); `phone_encrypted` displayed via custom `PhoneDisplay` component |
+| **User** | List, Show, Edit | No Delete (GDPR/DPDP soft-delete via custom action); `phone_encrypted` displayed via custom `PhoneDisplay` component |
 | **Flat** | List, Show, Edit | Read + limited edit (e.g. flat type, wing) |
 | **Payment** | List, Show | Read-only; filter by society, FY, status |
 | **AuditReport** | List, Show, Edit (status only) | Can publish/archive cross-society reports |

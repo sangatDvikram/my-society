@@ -3,64 +3,77 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
 
-/** Stub entity — full implementation in EPIC-04. */
+export enum VisitorStatus {
+  PENDING  = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  TIMEOUT  = 'TIMEOUT',
+  INSIDE   = 'INSIDE',
+  EXITED   = 'EXITED',
+}
+
 @Entity('visitor_logs')
+@Index(['societyId', 'entryTime'])
+@Index(['visitorPhoneHash'])
 export class VisitorLog {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id!: string
 
   @Column({ type: 'uuid' })
-  societyId: string
+  societyId!: string
+
+  @Column({ type: 'uuid' })
+  hostFlatId!: string
+
+  @Column({ length: 255 })
+  visitorName!: string
+
+  @Column({ type: 'bytea', nullable: true, select: false })
+  visitorPhoneEncrypted!: Buffer | null
+
+  @Index()
+  @Column({ length: 64, nullable: true })
+  visitorPhoneHash!: string | null
+
+  @Column({ length: 20, nullable: true })
+  vehicleNumber!: string | null
+
+  @Column({ length: 255 })
+  purpose!: string
+
+  @Column({ type: 'enum', enum: VisitorStatus, default: VisitorStatus.PENDING })
+  status!: VisitorStatus
 
   @Column({ type: 'uuid', nullable: true })
-  flatId: string
+  entryGuardId!: string | null
 
-  @Column()
-  visitorName: string
+  @Column({ type: 'uuid', nullable: true })
+  exitGuardId!: string | null
 
-  /** AES-256-GCM encrypted phone */
-  @Column({ nullable: true })
-  phoneEncrypted: string
+  @Column({ length: 36, nullable: true })
+  photoImageId!: string | null
 
-  @Column({ nullable: true })
-  phoneHash: string
-
-  /** PENDING | APPROVED | REJECTED | DENIED_TIMEOUT */
-  @Column({ default: 'PENDING' })
-  approvalStatus: string
-
-  /** WALK_IN | PRE_APPROVED | STAFF */
-  @Column({ nullable: true })
-  entryType: string
-
-  @Column({ nullable: true })
-  purpose: string
-
-  @Column({ nullable: true })
-  vehicleNumber: string
-
-  @Column({ nullable: true })
-  photoKey: string
-
-  @Column({ type: 'boolean', default: false })
-  gdprConsent: boolean
+  /** Satisfies both GDPR consent and DPDP notice-and-consent requirements */
+  @Column({ default: false })
+  gdprConsent!: boolean
 
   @Column({ type: 'timestamptz', nullable: true })
-  entryAt: Date
+  entryTime!: Date | null
 
   @Column({ type: 'timestamptz', nullable: true })
-  exitAt: Date
+  exitTime!: Date | null
 
-  @CreateDateColumn()
-  createdAt: Date
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt!: Date
 
-  @UpdateDateColumn()
-  updatedAt: Date
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt!: Date
 
-  @DeleteDateColumn()
-  deletedAt: Date
+  @DeleteDateColumn({ type: 'timestamptz' })
+  deletedAt!: Date | null
 }

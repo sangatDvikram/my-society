@@ -4,45 +4,41 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Length,
   Matches,
 } from 'class-validator'
 
-/**
- * CreateVisitorLogDto — mirrors the DTO validated by api-gateway.
- *
- * owner-service receives this object over TCP after api-gateway has
- * already validated and normalised the phone to E.164 format.
- *
- * owner-service applies its own validation as a defence-in-depth measure
- * (the TCP channel is internal but we still validate to catch bugs early).
- */
 export class CreateVisitorLogDto {
   @IsUUID()
   societyId!: string
 
   @IsUUID()
-  flatId!: string
+  hostFlatId!: string
 
   @IsString()
   @IsNotEmpty()
+  @Length(1, 255)
   visitorName!: string
 
-  /** E.164 normalised phone — api-gateway ensures this format before sending */
   @IsString()
-  @Matches(/^\+[1-9]\d{6,14}$/, {
-    message: 'visitorPhone must be a valid E.164 number',
-  })
+  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'visitorPhone must be a valid E.164 number' })
   visitorPhone!: string
 
   @IsString()
   @IsOptional()
-  vehicleNumber?: string
+  @Length(1, 255)
+  purpose!: string
 
   @IsString()
-  @IsNotEmpty()
-  purpose!: string
+  @IsOptional()
+  @Length(1, 20)
+  vehicleNumber?: string
 
   @IsBoolean()
   @IsOptional()
-  gdprConsentGiven?: boolean
+  gdprConsent?: boolean
+
+  /** UUID of the guard creating the entry */
+  @IsUUID()
+  entryGuardId!: string
 }

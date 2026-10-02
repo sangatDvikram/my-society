@@ -20,7 +20,7 @@ import { KmsService } from './kms.service'
  *                     One-way: raw phone is not recoverable from this value alone.
  *
  *   phone_encrypted — AES-256-GCM(normalised_phone, DEK, random_IV)
- *                     Reversible; decrypted only for display or GDPR export.
+ *                     Reversible; decrypted only for display or GDPR/DPDP export.
  *                     Buffer layout: [IV(12 bytes)][AuthTag(16 bytes)][Ciphertext]
  *
  * Both cryptographic keys are provided by `KmsService` which handles env-based

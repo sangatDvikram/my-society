@@ -46,6 +46,7 @@ export class VisitorLog {
   @Column({ nullable: true })
   photoKey: string
 
+  /** Satisfies both GDPR consent and DPDP notice-and-consent requirements */
   @Column({ type: 'boolean', default: false })
   gdprConsent: boolean
 

@@ -3,46 +3,75 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
 
-/** Stub entity — full implementation in EPIC-03. */
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  INVITED = 'INVITED',
+}
+
+export enum StaffSubRole {
+  GUARD = 'GUARD',
+  MAINTENANCE_STAFF = 'MAINTENANCE_STAFF',
+  ACCOUNTANT = 'ACCOUNTANT',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id!: string
+
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  societyId!: string
 
   @Column({ type: 'uuid', nullable: true })
-  societyId: string
+  flatId!: string
 
   /** OWNER | ADMIN | SUPER_ADMIN | STAFF | GUARD */
-  @Column()
-  role: string
+  @Column({ length: 20 })
+  role!: string
+
+  /** Sub-role for STAFF: GUARD | MAINTENANCE_STAFF | ACCOUNTANT */
+  @Column({ type: 'enum', enum: StaffSubRole, nullable: true })
+  staffSubRole!: StaffSubRole | null
 
   /** AES-256-GCM encrypted phone — never display raw */
-  @Column({ nullable: true })
-  phoneEncrypted: string
+  @Column({ type: 'bytea', nullable: true })
+  phoneEncrypted!: Buffer
 
   /** HMAC-SHA256 deterministic hash — for lookups only */
+  @Index()
   @Column({ nullable: true })
-  phoneHash: string
+  phoneHash!: string
 
+  @Column({ length: 255, nullable: true })
+  name!: string
+
+  @Column({ length: 255, nullable: true })
+  email!: string
+
+  @Column({ type: 'enum', enum: UserStatus, default: UserStatus.INVITED })
+  status!: UserStatus
+
+  /** TOTP secret for SUPER_ADMIN 2FA — stored encrypted */
   @Column({ nullable: true })
-  name: string
+  totpSecret!: string
 
+  /** FCM device token for push notifications */
   @Column({ nullable: true })
-  email: string
+  fcmToken!: string
 
-  @Column({ default: 'ACTIVE' })
-  status: string
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt!: Date
 
-  @CreateDateColumn()
-  createdAt: Date
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt!: Date
 
-  @UpdateDateColumn()
-  updatedAt: Date
-
-  @DeleteDateColumn()
-  deletedAt: Date
+  @DeleteDateColumn({ type: 'timestamptz' })
+  deletedAt!: Date
 }

@@ -44,7 +44,7 @@ export class CreateVisitorLogDto {
   @IsNotEmpty()
   purpose!: string
 
-  /** GDPR consent captured at the gate terminal */
+  /** GDPR/DPDP consent captured at the gate terminal */
   @IsBoolean()
   @IsOptional()
   gdprConsentGiven?: boolean

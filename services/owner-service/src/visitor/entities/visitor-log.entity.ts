@@ -8,92 +8,74 @@ import {
   UpdateDateColumn,
 } from 'typeorm'
 
-/**
- * VisitorStatus — state machine for a single visitor visit.
- *
- *  PENDING  → owner has not yet approved/denied
- *  APPROVED → owner approved; visitor may enter
- *  DENIED   → owner denied or 2-minute timeout expired (EPIC-04)
- *  INSIDE   → visitor entered and is currently inside
- *  EXITED   → visitor has left (exit recorded by guard)
- */
 export enum VisitorStatus {
   PENDING  = 'PENDING',
   APPROVED = 'APPROVED',
-  DENIED   = 'DENIED',
+  REJECTED = 'REJECTED',
+  TIMEOUT  = 'TIMEOUT',
   INSIDE   = 'INSIDE',
   EXITED   = 'EXITED',
 }
 
-/**
- * VisitorLog — one row per visit attempt.
- *
- * PII storage strategy (EPIC-02):
- *   phoneEncrypted  — AES-256-GCM ciphertext; decrypted only by admin endpoint
- *   phoneHash       — HMAC-SHA256(E.164, HMAC_KEY); used for block-list lookup
- *
- * The plain-text phone is NEVER stored.
- */
 @Entity('visitor_logs')
-@Index(['societyId', 'status'])          // admin dashboard filter
-@Index(['flatId', 'createdAt'])          // owner history view
+@Index(['societyId', 'entryTime'])
+@Index(['visitorPhoneHash'])
 export class VisitorLog {
   @PrimaryGeneratedColumn('uuid')
   id!: string
 
-  /** Multi-tenant discriminator — every query must include this */
   @Column({ type: 'uuid' })
   societyId!: string
 
-  /** Flat the visitor was heading to */
   @Column({ type: 'uuid' })
-  flatId!: string
+  hostFlatId!: string
 
-  @Column()
+  @Column({ length: 255 })
   visitorName!: string
 
-  /**
-   * AES-256-GCM encrypted phone (ciphertext + IV + auth-tag, base64).
-   * select: false — never returned by default SELECT queries.
-   * Decryption requires a KMS-managed DEK (EPIC-02).
-   */
-  @Column({ select: false })
-  phoneEncrypted!: string
+  /** AES-256-GCM encrypted phone — IV+AuthTag+Ciphertext in BYTEA column */
+  @Column({ type: 'bytea', nullable: true, select: false })
+  visitorPhoneEncrypted!: Buffer | null
 
-  /**
-   * HMAC-SHA256(E.164 phone, HMAC_KEY) stored as hex.
-   * Deterministic — used to match visitor against block-list without decrypting.
-   */
-  @Column()
+  /** HMAC-SHA256 hex — used for block-list and frequency lookups */
   @Index()
-  phoneHash!: string
+  @Column({ length: 64, nullable: true })
+  visitorPhoneHash!: string | null
 
-  @Column({ nullable: true, type: 'varchar' })
+  @Column({ length: 20, nullable: true })
   vehicleNumber!: string | null
 
-  @Column()
+  @Column({ length: 255 })
   purpose!: string
 
   @Column({ type: 'enum', enum: VisitorStatus, default: VisitorStatus.PENDING })
   status!: VisitorStatus
 
-  /** S3 object key for the entry photo taken by the guard */
-  @Column({ nullable: true, type: 'varchar' })
-  entryPhotoKey!: string | null
+  /** Hashed pre-approval OTP — raw token never stored */
+  @Column({ length: 64, nullable: true, select: false })
+  preApprovedTokenHash!: string | null
 
-  /** UUID of the owner who approved or null if pending/denied */
-  @Column({ nullable: true, type: 'uuid' })
-  approvedByOwnerId!: string | null
+  /** Guard who admitted the visitor */
+  @Column({ type: 'uuid', nullable: true })
+  entryGuardId!: string | null
 
-  @Column({ nullable: true, type: 'timestamptz' })
-  entryAt!: Date | null
+  /** Guard who recorded exit */
+  @Column({ type: 'uuid', nullable: true })
+  exitGuardId!: string | null
 
-  @Column({ nullable: true, type: 'timestamptz' })
-  exitAt!: Date | null
+  /** imageId from media-service — never a raw storage key */
+  @Column({ length: 36, nullable: true })
+  photoImageId!: string | null
 
-  /** GDPR consent for storing visitor photo and personal data (EPIC-20) */
+  /** Satisfies both GDPR consent and DPDP notice-and-consent requirements */
   @Column({ default: false })
-  gdprConsentGiven!: boolean
+  gdprConsent!: boolean
+
+  @Column({ type: 'timestamptz', nullable: true })
+  entryTime!: Date | null
+
+  @Column({ type: 'timestamptz', nullable: true })
+  exitTime!: Date | null
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date
@@ -101,7 +83,6 @@ export class VisitorLog {
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt!: Date
 
-  /** Soft-delete — GDPR erasure sets deletedAt instead of dropping the row */
   @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt!: Date | null
 }

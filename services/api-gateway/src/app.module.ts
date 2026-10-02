@@ -1,29 +1,32 @@
 import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { ThrottlerModule } from '@nestjs/throttler'
 
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { AuthModule } from './auth/auth.module'
 import { CryptoModule } from './common/crypto/crypto.module'
+import { CryptoRotationModule } from './crypto-rotation/crypto-rotation.module'
 import { DatabaseModule } from './database/database.module'
 import { VisitorProxyModule } from './visitor/visitor-proxy.module'
 
-/**
- * AppModule — root module of the api-gateway.
- *
- * Import order:
- *   ConfigModule        — loads .env / process.env; global so all modules can use ConfigService
- *   CryptoModule        — @Global(); provides KmsService + PhoneCryptoService everywhere
- *   DatabaseModule      — TypeORM PostgreSQL connection (gateway-local tables)
- *   VisitorProxyModule  — TCP ClientProxy + HTTP proxy endpoints for visitor ops
- *
- * As more domains are added (auth, payments, facilities …) their modules
- * are imported here in the same pattern.
- */
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => [
+        {
+          ttl: configService.get<number>('THROTTLE_TTL', 60) * 1000,
+          limit: configService.get<number>('THROTTLE_LIMIT', 100),
+        },
+      ],
+    }),
     CryptoModule,
     DatabaseModule,
+    AuthModule,
+    CryptoRotationModule,
     VisitorProxyModule,
   ],
   controllers: [AppController],

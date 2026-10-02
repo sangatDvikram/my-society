@@ -4,7 +4,7 @@ import { User } from '../../database/entities/user.entity'
 import { Components } from '../adminjs.options'
 
 /**
- * User resource — cross-society; no Delete (GDPR soft-delete); phone via PhoneDisplay.
+ * User resource — cross-society; no Delete (GDPR/DPDP soft-delete); phone via PhoneDisplay.
  * Section 16.3.1 of the PRD.
  */
 export const UserResource: ResourceWithOptions = {

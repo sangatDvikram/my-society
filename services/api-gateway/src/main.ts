@@ -6,15 +6,11 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule)
+  // rawBody: true preserves the raw request buffer for Razorpay webhook HMAC verification
+  const app = await NestFactory.create(AppModule, { rawBody: true })
 
-  /**
-   * Global ValidationPipe — applies class-validator rules on every request body.
-   *
-   *  whitelist: true          — strips unknown properties automatically
-   *  forbidNonWhitelisted: true — throws 400 if unknown properties are sent
-   *  transform: true           — auto-coerces primitives (string → number, etc.)
-   */
+  // rawBody: true in NestFactory.create is sufficient for WebhookSignatureGuard
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -23,10 +19,7 @@ async function bootstrap(): Promise<void> {
     }),
   )
 
-  // Global prefix for all API routes
   app.setGlobalPrefix('api/v1')
-
-  // Enable graceful shutdown hooks
   app.enableShutdownHooks()
 
   const port = process.env['PORT'] ?? 3000

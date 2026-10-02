@@ -25,12 +25,12 @@
 
 ## Overview
 
-The **Society Management and Logging System** replaces paper-based visitor registers, manual maintenance tracking, and fragmented communication channels with a unified, auditable, and GDPR-compliant digital platform.
+The **Society Management and Logging System** replaces paper-based visitor registers, manual maintenance tracking, and fragmented communication channels with a unified, auditable, and GDPR/DPDP-compliant digital platform.
 
 Key design principles:
 
 - **Multi-tenancy** — a single deployment serves multiple societies; data is isolated at the `society_id` level throughout the database and API layers.
-- **GDPR compliance** — soft-delete with 90-day anonymisation, AES-256-GCM encryption for all PII (phone numbers, PAN, bank account numbers), and explicit data-erasure workflows.
+- **GDPR & DPDP compliance** — soft-delete with 90-day anonymisation, AES-256-GCM encryption for all PII (phone numbers, PAN, bank account numbers), and explicit data-erasure workflows, satisfying both the EU GDPR and India's Digital Personal Data Protection Act, 2023 (DPDP).
 - **Security-first** — phone numbers stored as dual columns (AES-256-GCM ciphertext + HMAC-SHA256 hash for lookups); all secrets injected via environment variables; pre-signed URLs for all document and media access.
 - **Cross-platform** — every user-facing application ships as both a **React Native (Expo)** mobile app and a **Next.js + React** web dashboard.
 
@@ -56,7 +56,7 @@ All six app packages share a design token system via `packages/shared-ui-tokens`
 | **`owner-service`** | Owner-facing APIs: flats, maintenance, visitor logs, payments, rentals, facility bookings, events, PDF statements |
 | **`admin-service`** | Admin-facing APIs: societies, staff, announcements, facility management, vendor registry, audit PDF generation, AdminJS panel |
 | **`super-admin-service`** | Platform management: society onboarding, subscriptions, feature flags, DEK rotation, global AdminJS panel |
-| **`media-service`** | Common Image Media Service — unique image ID generation, object storage upload, on-demand Sharp transforms (resize/WebP/quality), variant caching |
+| **`media-service`** | Common Image Media Service — unique image ID generation, signed upload to Cloudinary, on-demand responsive transforms (resize/WebP/quality/LQIP), EXIF extraction |
 
 All services are NestJS applications containerised with Docker. They communicate over an internal network and are deployed via Docker Compose (or any standard container platform). Async jobs run on **BullMQ** backed by **Redis**.
 
@@ -82,18 +82,20 @@ All services are NestJS applications containerised with Docker. They communicate
 | Web | Next.js + React + Tailwind CSS | Next.js 15.x / React 19.x / TW 3.4 |
 | Backend | NestJS + TypeORM | NestJS 10.x / TypeORM 0.3.x |
 | Node.js Runtime | Node.js LTS | 22.x |
-| Database | PostgreSQL | 16 |
-| Cache / Queues | Redis + BullMQ | Redis 7.x / BullMQ 5.x |
+| Database | PostgreSQL via **Neon** (free serverless, 0.5 GB storage, branching) | 16 |
+| Cache / Queues | Redis + BullMQ via **Upstash** (free: 10,000 req/day, 256 MB) | Redis 7.x / BullMQ 5.x |
 | Admin Panel | AdminJS v7 (`@adminjs/nestjs`, `@adminjs/typeorm`, `@adminjs/express`) | 7.x |
 | Monorepo | Nx (task runner + build cache) + Lerna (versioning) | Nx 21.x / Lerna 8.x |
 | Linting | ESLint 9 flat config (`eslint.config.mjs`) + `typescript-eslint` + `import/order` | ESLint 9.x |
 | PDF Generation | Puppeteer (headless Chromium) | 22.x |
-| Image Processing | Sharp (libvips Node binding) | 0.33.x |
-| Object Storage | S3-compatible (AWS S3 by default; swappable with MinIO / LocalStack in dev) | — |
+| Media Hosting | **Cloudinary** (upload, LQIP, responsive transforms, EXIF) — images + video | — |
+| Object Storage | **Cloudflare R2** (free: 10 GB + 1M Class-A ops/month; S3-compatible, zero egress fees); non-media documents only — MinIO via Docker Compose for local dev | — |
 | Payments | Razorpay (UPI, cards, Autopay, Route) | — |
 | Push Notifications | Firebase Cloud Messaging (FCM) | — |
 | Containers | Docker + Docker Compose | Docker 25.x |
 | CI/CD | GitHub Actions (lint → type-check → test → SonarCloud → Snyk) | — |
+| Service Hosting | **Railway** ($5 free credit/month) or **Render** (free tier, sleeps after 15 min) | — |
+| Web App Hosting | **Vercel** (free hobby tier, unlimited Next.js deployments) | — |
 | Secret Management | Environment variables (`.env`; never committed) | — |
 
 ---
@@ -111,7 +113,7 @@ All services are NestJS applications containerised with Docker. They communicate
 | **Facility Management** | Facility CRUD, fixed/hourly/variable pricing, booking approval workflow, blackout periods |
 | **Vendor Management** | Empanelled vendor directory, encrypted phone reveal-log, document storage |
 | **Society Events** | Owner-created events, facility linking, RSVP cap, photo/video gallery, admin moderation |
-| **Common Image Media** | Unique Image ID (UUIDv4), on-demand Sharp transforms (`size`, `width`, `height`, `quality`, `format`, `blur`), variant caching with pre-signed delivery |
+| **Common Image Media** | Unique Image ID (UUIDv4), Cloudinary-backed upload + on-demand responsive transforms (`size`, `width`, `height`, `quality`, `format`, `blur`), LQIP, auto EXIF/orientation handling |
 | **AdminJS Panels** | Auto-generated admin UIs for Society Admin and Super Admin with multi-tenancy hooks |
 
 ---
@@ -368,12 +370,12 @@ alankapuri-my-society/                  ← git root
 │   │   ├── package.json               ← @society/super-admin-service (lint: npx eslint)
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.build.json
-│   └── media-service/                  ← ★ NestJS · object storage pre-signed URLs, Sharp, FFmpeg (port 3004)
+│   └── media-service/                  ← ★ NestJS · Cloudinary-backed upload signing + delivery URLs (port 3004)
 │       ├── src/
 │       │   ├── main.ts                 ← Bootstrap (port 3004)
 │       │   ├── app.module.ts · app.controller.ts · app.service.ts · app.controller.spec.ts
 │       │   └── database/database.module.ts
-│       ├── Dockerfile                  ← ★ Multi-stage + apk add ffmpeg in runner stage
+│       ├── Dockerfile                  ← ★ Multi-stage (no Sharp/FFmpeg native deps — Cloudinary handles transforms)
 │       ├── .env.example               ← DB · storage buckets · BullMQ env vars
 │       ├── package.json               ← @society/media-service (lint: npx eslint)
 │       ├── tsconfig.json

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -v --ssl-no-revoke -X POST -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"params\":{},\"id\":1}' https://resume-web-mcp-production.up.railway.app/mcp)",
+      "Bash(curl -s --ssl-no-revoke https://portfolio-cms-api-app-production.up.railway.app/v1/resume)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "portfolio-resume",
+    "portfolio-resume-local"
+  ]
+}

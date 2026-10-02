@@ -7,54 +7,95 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common'
 import { Observable } from 'rxjs'
 
-import { CreateVisitorLogDto } from './dto/create-visitor-log.dto'
-import { VisitorProxyService } from './visitor-proxy.service'
+import { UserRole } from '@society/shared-types'
 
-/**
- * VisitorProxyController
- *
- * Exposes the public-facing REST endpoints for visitor management.
- * Each action is forwarded to owner-service via TCP (ClientProxy).
- *
- * Routes (all prefixed with /api/v1 from main.ts setGlobalPrefix):
- *   POST   /api/v1/visitors            — create walk-in visitor log
- *   PATCH  /api/v1/visitors/:id/exit   — record exit (fire-and-forget)
- *
- * In a production flow the JWT guard would sit here extracting societyId
- * from the token payload.  That is implemented in EPIC-02.
- */
+import { ApproveRejectVisitorDto } from './dto/approve-reject-visitor.dto'
+import { CreateVisitorLogDto } from './dto/create-visitor-log.dto'
+import { PreApproveVisitorDto } from './dto/pre-approve-visitor.dto'
+import { PreApprovedEntryDto } from './dto/pre-approved-entry.dto'
+import { VisitorProxyService } from './visitor-proxy.service'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+
 @Controller('visitors')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 export class VisitorProxyController {
   constructor(private readonly visitorProxyService: VisitorProxyService) {}
 
-  /**
-   * POST /api/v1/visitors
-   *
-   * Walk-in visitor entry — guard captures details at the gate terminal.
-   * Returns the newly created VisitorLog record received from owner-service.
-   */
+  /** Walk-in entry — guard terminal */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.GUARD, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   create(@Body() dto: CreateVisitorLogDto): Observable<unknown> {
     return this.visitorProxyService.createVisitorLog(dto)
   }
 
-  /**
-   * PATCH /api/v1/visitors/:id/exit
-   *
-   * Guard marks visitor as exited.
-   * Fire-and-forget: owner-service updates the record asynchronously.
-   * The HTTP response returns 204 No Content immediately.
-   */
+  /** Owner creates pre-approval token */
+  @Post('pre-approve')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.OWNER)
+  preApprove(@Body() dto: PreApproveVisitorDto): Observable<unknown> {
+    return this.visitorProxyService.preApproveVisitor(dto)
+  }
+
+  /** Guard enters pre-approved token at gate */
+  @Post('pre-approved-entry')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.GUARD, UserRole.ADMIN)
+  preApprovedEntry(@Body() dto: PreApprovedEntryDto): Observable<unknown> {
+    return this.visitorProxyService.preApprovedEntry(dto)
+  }
+
+  /** Owner approves visitor */
+  @Patch(':id/approve')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(UserRole.OWNER)
+  approve(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ApproveRejectVisitorDto,
+  ): Observable<unknown> {
+    return this.visitorProxyService.approveVisitor(id, dto)
+  }
+
+  /** Owner rejects visitor */
+  @Patch(':id/reject')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(UserRole.OWNER)
+  reject(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ApproveRejectVisitorDto,
+  ): Observable<unknown> {
+    return this.visitorProxyService.rejectVisitor(id, dto)
+  }
+
+  /** Guard marks visitor as entered (after approval) */
+  @Patch(':id/enter')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(UserRole.GUARD, UserRole.ADMIN)
+  markEntry(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('guardId', ParseUUIDPipe) guardId: string,
+  ): Observable<unknown> {
+    return this.visitorProxyService.markEntry(id, guardId)
+  }
+
+  /** Guard marks visitor exit (fire-and-forget) */
   @Patch(':id/exit')
   @HttpCode(HttpStatus.NO_CONTENT)
-  exit(@Param('id', ParseUUIDPipe) id: string): void {
-    this.visitorProxyService.recordVisitorExit(id)
+  @Roles(UserRole.GUARD, UserRole.ADMIN)
+  exit(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('guardId', ParseUUIDPipe) guardId: string,
+  ): void {
+    this.visitorProxyService.recordVisitorExit(id, guardId)
   }
 }
